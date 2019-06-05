@@ -19,3 +19,5 @@ toMT <- function(dt, row, col, val){
   row.names(retMT) <- retDT$row
   return(retMT)
 }
+
+minMax <- function(x){ (x-min(x))/(max(x) - min(x))}

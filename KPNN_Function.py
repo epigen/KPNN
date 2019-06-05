@@ -61,9 +61,9 @@ parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 # run without arguments
 if len(sys.argv) < 4: # means we are in python shell or run script without arguments
     args = parser.parse_args([
-        os.environ['PROCESSED'] + "/TCR_Data.h5",
-        os.environ['KPNN_INPUTS'] + "/TCR_Edgelist.csv",
-        os.environ['KPNN_INPUTS'] + "/TCR_ClassLabels.csv",
+        os.environ['KPNN_INPUTS'] + "/SIM1_Data.csv",
+        os.environ['KPNN_INPUTS'] + "/SIM1_Edgelist.csv",
+        os.environ['KPNN_INPUTS'] + "/SIM1_ClassLabels.csv",
         os.environ['KPNN_OUTPUTS'] + "/"
     ])
     args.lambd = 0.01

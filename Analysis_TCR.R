@@ -8,8 +8,8 @@ dir.create(dirout(out))
 
 
 
-# LOAD DATA ---------------------------------------------------------------
-ff <- list.files(paste0(Sys.getenv("KPNN_OUTPUTS"), "/TCR/"), recursive=T, full.names=T, pattern="tf_NumGradMeans.csv")
+# LOAD DATA  ---------------------------------------------------------------
+ff <- list.files(paste0(Sys.getenv("KPNN_OUTPUTS"), c("/TCR/")), recursive=T, full.names=T, pattern="tf_NumGradMeans.csv")
 fx <- ff[1]
 numGradMeans.res <- lapply(ff, function(fx){
   fx <- gsub("\\/\\/", "/", fx)
@@ -29,3 +29,9 @@ numGradMeans$V3 <- NULL
 numGradMeans$V4 <- NULL
 colnames(numGradMeans) <- c("Node", "Weight", "Folder", "Replicate", "Experiment")
 write.tsv(numGradMeans, file=dirout(out, "NodeWeights.tsv"))
+
+
+
+# SIM1 --------------------------------------------------------------------
+
+
