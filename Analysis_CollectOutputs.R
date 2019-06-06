@@ -8,7 +8,8 @@ dir.create(dirout(out))
 # Num Grad Error ----------------------------------------------------------
 numGradTestError <- data.table()
 
-(res.folders <- paste0(Sys.getenv("KPNN_OUTPUTS"), c("SIM1", "SIM2", "SIM2N", "SIM2Y", "SIM2X")))
+(res.folders <- list.dirs(Sys.getenv("KPNN_OUTPUTS"), recursive=F, full.names=F))
+res.folders <- res.folders[res.folders != "Analysis"]
 fold <- res.folders[2]
 for(fold in res.folders){
   res.files <- list.files(fold, recursive=T, full.names=T, pattern="tf_NumGradTestError.txt")
