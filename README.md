@@ -2,7 +2,7 @@
 Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at).
 
 # System requirements
-1. KPNNs were developed on a linux computing cluster and a Mac. The program has not been tested on Windows.
+1. KPNNs were developed on a linux computing cluster and a Mac.
 
 2. Training of KPNNs is performed by a python script (KPNN_Function.py). This program has been developed and tested using python 2.7.6 with the following packages: 
   - tensorflow (1.3.1)
@@ -47,7 +47,8 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 2. After training is complete, to summarize test error across trained networks, use the R script Analysis_CollectOutputs.R
 3. Finally, to summarize and plot node weights in trained networks, use the R script Analysis_SIM.R (this requires running of Analysis_CollectOutputs.R first).
 
-# Instructions how to run KPNNs on your data
+# Instructions on how to run KPNNs on your data
 1. Example scripts to run additional datasets, such as the dataset on T cell receptor (TCR) stimulation or on predicting cell types in the Human Cell Atlas (HCA), or provided in the folder slurm/.
 2. All required inputs can be downloaded using the script Download_Data.sh, except for single-cell expression data from the Human Cell Atlas, which should be downloaded under https://preview.data.humancellatlas.org and should then be stored under $KPNN_INPUTS (defined in setup.sh)
 3. After training, use Analysis_CollectOutputs.R, and then Analysis_TCR.R or Analysis_HCA.R to summarize the results across network replicates.
+4. To adjust these analyses to your dataset, you mainly need to adjust the inputs to provide your data, class labels, and edgelist.
