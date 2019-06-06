@@ -8,7 +8,7 @@ dir.create(dirout(out))
 # Num Grad Error ----------------------------------------------------------
 numGradTestError <- data.table()
 
-(res.folders <- paste0(Sys.getenv("KPNN_OUTPUTS"), c("HCA", "TCR", "SIM1", "SIM2")))
+(res.folders <- paste0(Sys.getenv("KPNN_OUTPUTS"), c("SIM1", "SIM2", "SIM2N", "SIM2Y")))
 fold <- res.folders[2]
 for(fold in res.folders){
   res.files <- list.files(fold, recursive=T, full.names=T, pattern="tf_NumGradTestError.txt")
@@ -27,6 +27,8 @@ write.tsv(numGradTestError, dirout(out, "TestError.tsv"))
 
 ggplot(numGradTestError, aes(x=Experiment, y=Error)) + geom_jitter(width=0.1, height=0)  + theme_bw(12) + xRot() + facet_wrap(~Dataset, scales="free")
 ggsave(dirout(out, "TestError.pdf"), w=10, h=5)
+
+
 
 # Accuracy for multiple classes ---------------------------------------------------------
 acc.file <- dirout(out, "Unbalanced_Accuracy.RData")

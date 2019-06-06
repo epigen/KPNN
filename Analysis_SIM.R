@@ -9,7 +9,7 @@ dir.create(dirout(out))
 
 
 # LOAD DATA  ---------------------------------------------------------------
-ff <- list.files(paste0(Sys.getenv("KPNN_OUTPUTS"), c("/SIM2", "/SIM1/")), recursive=T, full.names=T, pattern="tf_NumGradMeans.csv")
+ff <- list.files(paste0(Sys.getenv("KPNN_OUTPUTS"), c("/SIM2/", "/SIM1/")), recursive=T, full.names=T, pattern="tf_NumGradMeans.csv")
 fx <- ff[1]
 numGradMeans.res <- lapply(ff, function(fx){
   fx <- gsub("\\/\\/", "/", fx)
@@ -30,11 +30,13 @@ numGradMeans$V4 <- NULL
 colnames(numGradMeans) <- c("Node", "Weight", "Folder", "Replicate", "Experiment")
 write.tsv(numGradMeans, file=dirout(out, "NodeWeights.tsv"))
 
-numGradMeans <- numGradMeans[Folder %in% gsub("^.(.+).$", "\\1", err[Error < 0.15]$Folder)]
+
+# Filter By error ---------------------------------------------------------
+err <- fread(dirout(inDir, "TestError.tsv"))
+numGradMeans <- numGradMeans[Folder %in% gsub("^.(.+).$", "\\1", err[Error < 0.2]$Folder)]
 numGradMeans[, NormWeights := minMax(abs(Weight)), by=c("Experiment")]
 
 # SIM1 --------------------------------------------------------------------
-err <- fread(dirout(inDir, "TestError.tsv"))
 pDat <- numGradMeans[grepl("SIM1", Experiment)]
 pDat$Node <- gsub("nodeX", "A", gsub("b", "", pDat$Node))
 pDat$Node <- factor(pDat$Node, levels=rev(unique(pDat[,mean(NormWeights), by="Node"][order(V1)]$Node)))

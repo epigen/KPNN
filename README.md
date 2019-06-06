@@ -1,2 +1,49 @@
-# KPNN
-Knowledge-primed neural networks
+# KPNNs
+Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at).
+
+# System requirements
+1. KPNNs were developed on a linux computing cluster and a Mac. The program has not been tested on Windows.
+
+2. Training of KPNNs is performed by a python script (KPNN_Function.py). This program has been developed and tested using python 2.7.6 with the following packages: 
+  - tensorflow (1.3.1)
+  - tensorflow-tensorboard (0.1.8)
+  - pandas (0.19.2)
+  - numpy (1.13.2)
+  - scipy (0.14.0)
+  - tables (3.4.4)
+  - psutil (5.4.6)
+
+3. Downstream analysis is performed in R (version 3.2.3) based on the packages:
+  - ggplot2 (2.2.1)
+  - data.table (1.11.4)
+
+# Installation
+1. Clone this github repository
+2. Install the systems requirements listed above
+3. Edit the file setup.sh to define the location of the github repository (code) and where input and output data should be stored. 
+4. Source setup.sh, this will create the required environmental variables (all start with "KPNN_").
+
+# Demo
+1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget is set up on your system, you can do this using the script Download_Data.sh.
+2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs
+      ```
+		  data="$KPNN_INPUTS/SIM1_Data.csv"
+		  edges="$KPNN_INPUTS/SIM1_Edgelist.csv"
+		  classLabels="$KPNN_INPUTS/SIM1_ClassLabels.csv"
+		  outPath=$KPNN_OUTPUTS
+          python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.001 --lambd=0.2 $data $edges $classLabels $outPath
+      ```
+3. The program will produce a folder called "run_1" or similar, where the output of the KPNN is stored. Outputs include:
+  - tf_cost.csv - tracks training progress over iterations
+  - tf_NumGradMeans.csv - Node weights (from numerical gradient estimation)
+  - tf_NumGradTestError.txt - Test error of the latest saved model that was used to calculate node weights
+  - tf_settings.csv - The hyperparameters used to train this model
+  - tf_weights.csv - Edge weights of the final network
+  - tf_yHat_val.csv - Predicted class labels on test data
+  - tf_yTrue_val.csv - True class labels on test data
+4. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder slurm/. This scripts are based on [SLURM](slurm.schedmd.com).  For example, the script to run simulated demo networks can be found at run_SIM_KPNN.sh.
+5. To summarize test error across trained networks, use the script R script Analysis_CollectOutputs.R
+6. To summarize and plot Node weights in trained networks, use the script Analysis_SIM.R (this requires running of Analysis_CollectOutputs.R first)
+
+# Instructions how to use
+1. 

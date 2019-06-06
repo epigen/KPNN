@@ -40,7 +40,7 @@ outPath="$KPNN_OUTPUTS_SIM/${label}/"
 mkdir $outPath
 for j in {1..3}; do
 sbatch --job-name="SIM KPNN $label" --cpus-per-task=10 --partition=longq --mem=60000 --time=7-00:00:00 --exclude=i[001-020] --nodes=1 \
-    --wrap="for i in {1..30}; do python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.05 --lambd=0.2 --normalizedMatrix --normalizedMatrix01 $inPathData $inPathEdges $inPathYs $outPath; done" \
+    --wrap="for i in {1..30}; do python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.05 --lambd=0.1 --normalizedMatrix --normalizedMatrix01 $inPathData $inPathEdges $inPathYs $outPath; done" \
     --output="$outPath/${label}_$j.log"
 done
 
@@ -49,7 +49,7 @@ outPath="$KPNN_OUTPUTS_SIM/${label}/"
 mkdir $outPath
 for j in {1..3}; do
 sbatch --job-name="SIM KPNN $label" --cpus-per-task=10 --partition=longq --mem=60000 --time=7-00:00:00 --exclude=i[001-020] --nodes=1 \
-    --wrap="for i in {1..30}; do python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.05 --lambd=0.2 --normalizedMatrix --normalizedMatrix01 --dropOut=0.7 $inPathData $inPathEdges $inPathYs $outPath; done" \
+    --wrap="for i in {1..30}; do python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.05 --lambd=0.1 --normalizedMatrix --normalizedMatrix01 --dropOut=0.7 $inPathData $inPathEdges $inPathYs $outPath; done" \
     --output="$outPath/${label}_$j.log"
 done
 
