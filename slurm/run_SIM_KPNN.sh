@@ -2,7 +2,7 @@
 
 
 #
-# SIM1 - One predictive node
+# Simulation 1 - One predictive node
 #
 KPNN_OUTPUTS_SIM="${KPNN_OUTPUTS}/SIM1/"
 mkdir $KPNN_OUTPUTS_SIM
@@ -25,9 +25,9 @@ done
 
 
 #
-# SIM2 - Two predictive nodes
+# Simulation 2 - Two predictive nodes
 #
-KPNN_OUTPUTS_SIM="${KPNN_OUTPUTS}/SIM2Y/"
+KPNN_OUTPUTS_SIM="${KPNN_OUTPUTS}/SIM2/"
 mkdir $KPNN_OUTPUTS_SIM
 echo $KPNN_OUTPUTS_SIM
 

@@ -21,11 +21,11 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 1. Clone this github repository
 2. Install the systems requirements listed above
 3. Edit the file setup.sh to define the location of the github repository (code) and where input and output data should be stored. 
-4. Source setup.sh, this will create the required environmental variables (all start with "KPNN_").
+4. Source setup.sh, this will create the required environmental variables (all starting with "KPNN_").
 
 # Demo to train one network
 1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget is set up on your system, you can do this using the script Download_Data.sh.
-2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs
+2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs, for example:
       ```
 		  data="$KPNN_INPUTS/SIM1_Data.csv"
 		  edges="$KPNN_INPUTS/SIM1_Edgelist.csv"
@@ -41,6 +41,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
   - tf_weights.csv - Edge weights of the final network
   - tf_yHat_val.csv - Predicted class labels on test data
   - tf_yTrue_val.csv - True class labels on test data
+4. The program should run for approximately 30 minutes or less
   
 # Demo to train multiple network replicates
 1. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder slurm/. These scripts are based on [SLURM](slurm.schedmd.com). The script to run simulated demo networks is provided in run_SIM_KPNN.sh.

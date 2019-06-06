@@ -5,9 +5,8 @@ KPNN_OUTPUTS_TCR="${KPNN_OUTPUTS}/TCR/"
 mkdir $KPNN_OUTPUTS_TCR
 echo $KPNN_OUTPUTS_TCR
 
-KPNN_Replicates=2
+KPNN_Replicates=30
 
-# HCA - Bone marrow
 inPathData="$KPNN_INPUTS/TCR_Data.h5"
 inPathEdges="$KPNN_INPUTS/TCR_Edgelist.csv"
 inPathYs="$KPNN_INPUTS/TCR_ClassLabels.csv"

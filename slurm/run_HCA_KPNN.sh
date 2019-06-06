@@ -4,7 +4,7 @@ KPNN_OUTPUTS_HCA="${KPNN_OUTPUTS}/HCA/"
 mkdir $KPNN_OUTPUTS_HCA
 echo $KPNN_OUTPUTS_HCA
 
-KPNN_Replicates=1
+KPNN_Replicates=30
 
 # HCA - Bone marrow
 inPathData="$KPNN_INPUTS/ica_bone_marrow_h5.h5"

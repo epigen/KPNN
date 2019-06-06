@@ -29,9 +29,3 @@ numGradMeans$V3 <- NULL
 numGradMeans$V4 <- NULL
 colnames(numGradMeans) <- c("Node", "Weight", "Folder", "Replicate", "Experiment")
 write.tsv(numGradMeans, file=dirout(out, "NodeWeights.tsv"))
-
-
-
-# SIM1 --------------------------------------------------------------------
-
-

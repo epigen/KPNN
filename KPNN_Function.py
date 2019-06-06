@@ -195,8 +195,8 @@ outputs_y = list(set(file_y.columns.tolist()) - set(["barcode"]))
 outputs_edges = list(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
 outputs = list(set(outputs_y) & set(outputs_edges))
 print "Number of Outputs used: " + str(len(outputs))  + " --> " + ",".join(outputs)
-print "\tY file outputs: " + ",".join(outputs_y)
-print "\tEdge file outputs: " + ",".join(outputs_edges)
+print "\tClass labels: " + ",".join(outputs_y)
+print "\tNetwork outputs: " + ",".join(outputs_edges)
 assert len(outputs) > 0, "No outputs fitting between y table and edgelist"
 assert len(outputs) == len(set(outputs)), "outputs non unique!"
 open(os.path.join(outPath, "outputs.txt"),"w").write("\n".join(outputs))
@@ -283,7 +283,6 @@ for idx, x in enumerate(test_groups):
     test_groups_list[x].append(idx)
 
 # Split indices into test and train set
-print outputs
 test_idx = []
 val_idx = []
 train_idx = []
@@ -401,14 +400,12 @@ i = 1
 # while we decrease the number of rows each time?
 while edges_ranks.shape[0] < edges_ranks_rows:
     edges_ranks_rows = edges_ranks.shape[0]
-    print i
     leaves = set(edges_ranks['child'].tolist()) - set(edges_ranks['parent'].tolist())
     if i > 1:
         nodesRanks.extend(leaves)
     else:
         assert set(leaves).issubset(set(genesListOrig)), "Some genes not found in the data!"
     edges_ranks = edges_ranks.loc[~edges_ranks['child'].isin(leaves)]
-    print edges_ranks.shape[0]
     i += 1
 
 assert edges_ranks.shape[0] == 0, "Edgelist is circular!"
@@ -673,7 +670,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
             sess.run(train, {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
     
     if i < 100 or i % 10 == 0:
-        print i
+        print "\nTraining epoch: " + str(i)
         
         # Other output
         lossRes, trainClassProb, trainWriteContent = sess.run([loss, y_hat, merged], {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
@@ -681,7 +678,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
         testErrRun = testerror.mean()
         
         # Print and write Costs
-        print "Mean loss: " + "%.4f" % lossRes + " Test loss: " + "%.4f" % lossTestRes + " Test error: " + str(testErrRun)
+        print "Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun)
         costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
         costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
         costFile.close()
@@ -782,7 +779,7 @@ numGrad_yWeights = np.array([[1.0 for x in range(y_val.shape[1])],]* y_val.shape
 numAgg = 0
 nodesNumGrad = [x for x in nodesRanks if not x in outputs]
 for n in nodesNumGrad:
-    print n
+    print "Calculating numerical gradient for: " + n
     logMem("Tensorflow numgrad " + n)
     res = (sess.run(y_hat, {genesOrig:x_val, y_true:y_val, numApproxPlus: n}) - sess.run(y_hat, {genesOrig:x_val, y_true:y_val, numApproxMinus: n}))/(2*args.numGradEpsilon)
     res = res.mean(1)
