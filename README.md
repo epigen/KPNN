@@ -37,7 +37,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
       ```
 4. To stop the virtual environment
       ```
-		  deactivate
+	  deactivate
       ```
 
 # Demo to train one network
