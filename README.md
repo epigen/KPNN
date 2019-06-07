@@ -31,7 +31,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 		  Rscript Test_Data.R
 		  python KPNN_Function.py
       ```
-3. Ro stop the virtual environment
+3. To stop the virtual environment
       ```
 		  deactivate
       ```
