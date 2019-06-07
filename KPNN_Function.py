@@ -805,3 +805,5 @@ print "...Time passed:"
 print start - time.time()
 
 sess.close()
+
+print "\n\n\t\t\tKPNN TRAINING COMPLETED SUCCESSFULLY\n\n"

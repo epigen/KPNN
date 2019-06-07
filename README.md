@@ -1,5 +1,6 @@
 # KPNNs
-Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at).
+Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at). KPNNs are neural networks that learn to predict class values from input data given a specific network structure. After training, they enable extraction of extraction of node weights using numerical gradient estimation. Node weights represent the importance of individual nodes for predictions.
+
 
 # System requirements
 1. KPNNs were developed on linux and on Mac.
@@ -7,12 +8,17 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 3. Downstream analysis is performed in R (tested on versions 3.2.3 or 3.5.1)
 
 # Installation
-1. Create a directory to contain all analysis
+1. Make sure you use the right versions of python and R
+      ```
+	  python --version
+	  R --version
+      ```
+2. Create a directory to contain all analysis
       ```
 	  mkdir KPNN/
 	  cd KPNN/
       ```
-2. The recommended approach is to use a virtual environment
+3. The recommended approach is to use a virtual environment
       ```
 	  # Set up virtual environment
 	  pip install virtualenv
@@ -20,7 +26,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  virtualenv virtenv --no-site-packages
 	  source virtenv/bin/activate
       ```
-3. Installation instructions:
+4. Installation instructions:
 	  ```
 	  # Clone this repository
 	  git clone https://github.com/epigen/KPNN.git
@@ -35,10 +41,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  Rscript Test_Data.R
 	  python KPNN_Function.py
       ```
-4. To stop the virtual environment
-      ```
-	  deactivate
-      ```
+5. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete.
 
 # Demo to train one network
 1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget or curl is set up on your system, you can do this using the scripts under Download_Data/.
