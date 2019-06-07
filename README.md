@@ -27,6 +27,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 		  # Clone this repository
 		  git clone https://github.com/epigen/KPNN.git
 		  cd KPNN/
+		  git checkout dev
 		  # Sets up environmental variables
 		  source setup_example.sh
 		  # Install requirements (python and R)
