@@ -9,31 +9,31 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 # Installation
 1. Create a directory to contain all analysis
       ```
-		  mkdir KPNN/
-		  cd KPNN/
+	  mkdir KPNN/
+	  cd KPNN/
       ```
 2. The recommended approach is to use a virtual environment
       ```
-		  # Set up virtual environment
-		  pip install virtualenv
-		  mkdir virtenv
-		  virtualenv virtenv --no-site-packages
-		  source virtenv/bin/activate
+	  # Set up virtual environment
+	  pip install virtualenv
+	  mkdir virtenv
+	  virtualenv virtenv --no-site-packages
+	  source virtenv/bin/activate
       ```
 3. Installation instructions:
 	  ```
-		  # Clone this repository
-		  git clone https://github.com/epigen/KPNN.git
-		  cd KPNN/
-		  git checkout dev
-		  # Sets up environmental variables
-		  source setup_example.sh
-		  # Install requirements (python and R)
-		  pip install -r Requirements_python.txt
-		  Rscript Requirements_R.R
-		  # Generate test data and run test
-		  Rscript Test_Data.R
-		  python KPNN_Function.py
+	  # Clone this repository
+	  git clone https://github.com/epigen/KPNN.git
+	  cd KPNN/
+	  git checkout dev
+	  # Sets up environmental variables
+	  source setup_example.sh
+	  # Install requirements (python and R)
+	  pip install -r Requirements_python.txt
+	  Rscript Requirements_R.R
+	  # Generate test data and run test
+	  Rscript Test_Data.R
+	  python KPNN_Function.py
       ```
 4. To stop the virtual environment
       ```
