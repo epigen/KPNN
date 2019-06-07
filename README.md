@@ -9,8 +9,8 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 # Installation
 1. Create a directory to contain all analysis
       ```
-	  		mkdir KPNN/
-			cd KPNN/
+	  	mkdir KPNN/
+		cd KPNN/
       ```
 2. The recommended approach is to use a virtual environment
       ```
