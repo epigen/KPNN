@@ -15,12 +15,10 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 2. The recommended approach is to use a virtual environment
       ```
 		  # Set up virtual environment
-		  pip install --user virtualenv==16.0.0
-		  VIRTENV=virtenv
-		  rm -r $VIRTENV
-		  mkdir $VIRTENV
-		  virtualenv $VIRTENV --no-site-packages
-		  source $VIRTENV/bin/activate
+		  pip install virtualenv
+		  mkdir virtenv
+		  virtualenv virtenv --no-site-packages
+		  source virtenv/bin/activate
       ```
 3. Installation instructions:
 	  ```
