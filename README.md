@@ -7,17 +7,22 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 3. Downstream analysis is performed in R (tested on versions 3.2.3 or 3.5.1)
 
 # Installation
-1. The recommended approach is to use a virtual environment
+1. Create a directory to contain all analysis
+      ```
+	  		mkdir KPNN/
+			cd KPNN/
+      ```
+2. The recommended approach is to use a virtual environment
       ```
 		  # Set up virtual environment
 		  pip install --user virtualenv==16.0.0
-		  VIRTENV=./
+		  VIRTENV=virtenv
 		  rm -r $VIRTENV
 		  mkdir $VIRTENV
 		  virtualenv $VIRTENV --no-site-packages
 		  source $VIRTENV/bin/activate
       ```
-2. Installation instructions:
+3. Installation instructions:
 	  ```
 		  # Clone this repository
 		  git clone https://github.com/epigen/KPNN.git
@@ -31,7 +36,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 		  Rscript Test_Data.R
 		  python KPNN_Function.py
       ```
-3. To stop the virtual environment
+4. To stop the virtual environment
       ```
 		  deactivate
       ```
