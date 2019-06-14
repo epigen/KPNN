@@ -46,3 +46,5 @@ Analysis/
 Demos/
 
 setup.sh
+
+gmon.out

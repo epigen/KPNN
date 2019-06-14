@@ -364,9 +364,9 @@ x_val = fullData[:,val_idx]
 x_test = fullData[:,test_idx]
 
 # print(result of draws)
-print("Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])]))
-print("Validation Ys \t(total " + str(y_test.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_test[i,:].sum()) for i in range(y_test.shape[0])]))
-print("Testing Ys \t(total " + str(y_val.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_val[i,:].sum()) for i in range(y_val.shape[0])]))
+print("Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])]))
+print("Validation Ys \t(total " + str(y_test.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_test[i,:].sum()) for i in range(y_test.shape[0])]))
+print("Testing Ys \t(total " + str(y_val.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_val[i,:].sum()) for i in range(y_val.shape[0])]))
 
 
 # Normalize to 0-1 for each row (input/gene) --------------------------------------------------------------------------------------------------------------------
@@ -445,7 +445,7 @@ logMem("Setup data")
 if args.minibatch == 0 or args.minibatch > x_train.shape[1]:
     args.minibatch = x_train.shape[1]
 else:
-    args.minibatch = x_train.shape[1]/(x_train.shape[1]/(args.minibatch))
+    args.minibatch = int(x_train.shape[1]/(x_train.shape[1]/(args.minibatch)))
 
 
 
@@ -705,7 +705,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
     # DEFINE MINIBATCH    
     idxs = list(range(x_train.shape[1]))
     np.random.shuffle(idxs)
-    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in range(0, x_train.shape[1], args.minibatch)]
+    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in list(range(0, x_train.shape[1], args.minibatch))]
     # generates list of lists, each containing the indices used
     
     # TRAIN BY MINIBATCH
