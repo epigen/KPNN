@@ -5,7 +5,7 @@ source(paste0(Sys.getenv("KPNN_CODEBASE"), "/init.R"))
 args=commandArgs(trailingOnly = TRUE)
 kpnn.output.folder <- if(length(args) == 0) paste0(Sys.getenv("KPNN_OUTPUTS"), "/run_2/") else args[1]
 if(!dir.exists(kpnn.output.folder)) message("Missing folder of KPNN output:", kpnn.output.folder, " please provide the correct folder")
-out <- "Demo_OneNetwork_Analysis/"
+out <- "Demo_OneNetwork/"
 dir.create(dirout(out))
 print(paste("Processing KPNN output from folder:", kpnn.output.folder))
 
