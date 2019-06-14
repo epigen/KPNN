@@ -77,7 +77,7 @@ if len(sys.argv) < 4: # means we are in python shell or the script is run withou
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_ClassLabels.csv",
-        os.environ['KPNN_OUTPUTS'] + "/"
+        os.environ['TMPDIR']
     ])
     args.lambd = 0.01
     args.iterations = 5

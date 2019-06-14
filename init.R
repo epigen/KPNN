@@ -1,7 +1,7 @@
 require(data.table)
 require(ggplot2)
 
-for(sys.v in c("KPNN_OUTPUTS", "KPNN_INPUTS", "KPNN_ROOT", "KPNN_CODEBASE")){
+for(sys.v in c("KPNN_OUTPUTS", "KPNN_INPUTS", "KPNN_ROOT", "KPNN_CODEBASE", "KPNN_DEMOS")){
     if(! sys.v %in% names(Sys.getenv())){
         message("Missing environmental variable:", sys.v)
     }

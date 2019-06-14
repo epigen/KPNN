@@ -3,10 +3,9 @@ source(paste0(Sys.getenv("KPNN_CODEBASE"), "/init.R"))
 
 # Setup -------------------------------------------------------------------
 args=commandArgs(trailingOnly = TRUE)
-kpnn.output.folder <- if(length(args) == 0) paste0(Sys.getenv("KPNN_OUTPUTS"), "/run_2/") else args[1]
+if(length(args) == 0) message("Missing first argument: Please provide path to network output folder")
+kpnn.output.folder <- args[1]
 if(!dir.exists(kpnn.output.folder)) message("Missing folder of KPNN output:", kpnn.output.folder, " please provide the correct folder")
-out <- "Demo_OneNetwork/"
-dir.create(dirout(out))
 print(paste("Processing KPNN output from folder:", kpnn.output.folder))
 
 # Read in Data ------------------------------------------------------------
@@ -27,7 +26,7 @@ ggplot(pDat, aes(x=iteration, y=value, color=variable)) + geom_line() +
   scale_color_discrete(name="Data") + xlab("Iteration") + ylab("Loss") +
   theme_bw(12) +
   ggtitle(title)
-ggsave(dirout(out, "TrainingCurve.pdf"), w=5,h=4)
+ggsave(paste0(kpnn.output.folder, "TrainingCurve.pdf"), w=5,h=4)
 
 
 
@@ -36,5 +35,6 @@ nodeWeights[,NodeWeight := abs(output)]
 if("nodeX" %in% nodeWeights$Node) nodeWeights[,Node := gsub("nodeX", "A", gsub("b", "", Node))]
 nodeWeights$Node <- factor(nodeWeights$Node, levels = nodeWeights[order(NodeWeight)]$Node)
 
-ggplot(nodeWeights, aes(x=Node, y=NodeWeight)) + geom_bar(stat="identity") + theme_bw(12) + xRot() 
-ggsave(dirout(out, "NodeWeights.pdf"), w=15, h=4)
+ggplot(nodeWeights, aes(x=Node, y=NodeWeight)) + geom_point(color="red") + # geom_bar(stat="identity") + 
+  theme_classic(12) + xRot() 
+ggsave(paste0(kpnn.output.folder, "NodeWeights.pdf"), w=15, h=4)

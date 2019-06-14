@@ -39,7 +39,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  Rscript Requirements_R.R
 
 	  # Generate test data and run test
-	  Rscript Test_Data.R
+	  Rscript Generate_test_data.R
 	  python KPNN_Function.py
       ```
 5. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete.
@@ -51,7 +51,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 		  data="$KPNN_INPUTS/SIM1_Data.csv"
 		  edges="$KPNN_INPUTS/SIM1_Edgelist.csv"
 		  classLabels="$KPNN_INPUTS/SIM1_ClassLabels.csv"
-		  outPath=$KPNN_OUTPUTS
+		  outPath=$KPNN_DEMOS
           python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.001 --lambd=0.2 $data $edges $classLabels $outPath
       ```
 3. The program will produce a folder called "run_1" (or a number > 1 if another run already exists) in the location defined by $outPath, where the output of the KPNN is stored. Outputs include:
