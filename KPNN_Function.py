@@ -334,7 +334,7 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
         # if the test set is predefined, then we still draw barcodes for it, but then do not use them
         test_and_val_group_N = int(((len(test_groups_list[test_grp]) + 0.0)/len(test_groups)) * nrTestCells * 2)
         test_and_val_barcodes=np.random.choice(test_groups_list[test_grp], test_and_val_group_N, replace=False).tolist()
-        val_idx_x = np.random.choice(test_and_val_barcodes, test_and_val_group_N/2, replace=False).tolist()
+        val_idx_x = np.random.choice(test_and_val_barcodes, int(test_and_val_group_N/2), replace=False).tolist()
         test_idx_x = list(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
         train_idx_x = list(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
         # print(and assertions)
@@ -410,7 +410,7 @@ if args.normalizedMatrix01:
 
 # Get weight matrix FUNCTION  --------------------------------------------------------------------------------------------------------------------
 def weightMatrixFromYs(ys_input):
-    matrix_groups = ["".join([str(i) for i in x]) for x in np.transpose(fullY.astype("int")).tolist()]
+    matrix_groups = ["".join([str(i) for i in x]) for x in np.transpose(ys_input.astype("int")).tolist()]
     matrix_groups_weight={}
     # get factor to multiply by for each group
     for matrix_grp in set(matrix_groups):
@@ -703,7 +703,7 @@ logMem("Prepared Training")
 for i in [xx + 1 for xx in range(args.iterations)]:
     
     # DEFINE MINIBATCH    
-    idxs = range(x_train.shape[1])
+    idxs = list(range(x_train.shape[1]))
     np.random.shuffle(idxs)
     minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in range(0, x_train.shape[1], args.minibatch)]
     # generates list of lists, each containing the indices used
