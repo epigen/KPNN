@@ -1,11 +1,16 @@
 require(data.table)
 require(ggplot2)
 
-
-dirout <- function (...){
-  paste0(Sys.getenv("KPNN_ROOT"), ...)
+for(sys.v in c("KPNN_OUTPUTS", "KPNN_INPUTS", "KPNN_ROOT", "KPNN_CODEBASE")){
+    if(! sys.v %in% names(Sys.getenv())){
+        message("Missing environmental variable:", sys.v)
+    }
 }
 
+# FUNCTIONS
+dirout <- function (...){
+  paste0(Sys.getenv("KPNN_ROOT"), "/", ...)
+}
 
 xRot <- function(){theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))}
 

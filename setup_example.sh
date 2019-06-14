@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Point to where you want input and output data to go
-export KPNN_ROOT=./
+export KPNN_ROOT=$PWD
 # Point to the base of the github repository
-export KPNN_CODEBASE=./
+export KPNN_CODEBASE=$PWD
 
 # These will be populated automatically but can also be adjusted
 export KPNN_OUTPUTS=$KPNN_ROOT/Outputs/
