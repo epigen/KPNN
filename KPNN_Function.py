@@ -155,6 +155,7 @@ def get_matrix_from_h5(filename, genome):
         return GeneBCMatrix(gene_ids, gene_names, barcodes, matrix)
 
 def indexInList(l2, l1):
+    assert len(set(l1)) == len(l1), "Provided list contains duplicated elements"
     ref={}
     res=[]
     for idx, x in enumerate(l1):
@@ -252,8 +253,8 @@ if args.control:
     # Set up fullY
     size_ds = int(min(fullY.shape[1], args.minibatch*2)/2) * 2 # this must be devidable by two
     fullY = fullY[0:1,:size_ds]
-    fullY[:,:size_ds/2] = 1
-    fullY[:,size_ds/2:] = 0
+    fullY[:,:size_ds//2] = 1
+    fullY[:,size_ds//2:] = 0
     
     # set up Barcodes
     barcodes = barcodes[:size_ds]
@@ -310,7 +311,8 @@ test_def = test_idx != []
 # if the previous step didn't define everything, than randomly pick elements
 if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
     # Number of test cells (this is relative to the full number of cells)
-    nrTestCells = len(barcodes)*args.testSet
+    nrTestCells = int(len(barcodes)*args.testSet)
+    assert isinstance(args.maxCells, int)
     if nrTestCells > args.maxCells: nrTestCells = args.maxCells
     
     # Group cells by output
@@ -445,7 +447,7 @@ logMem("Setup data")
 if args.minibatch == 0 or args.minibatch > x_train.shape[1]:
     args.minibatch = x_train.shape[1]
 else:
-    args.minibatch = int(x_train.shape[1]/(x_train.shape[1]/(args.minibatch)))
+    args.minibatch = int(x_train.shape[1]//(x_train.shape[1]//(args.minibatch)))
 
 
 
@@ -507,7 +509,7 @@ for iNode in nodesRanks:
             sys.exit(eg + " was not found in the nodes or the genes! Exiting")
             #print((eg + " was not found in the nodes or the genes! Exiting"))
 
-# Weights (tf variable)
+# Weights
 weightTotalLength = sum([len(weightMap[i]) for i in nodesRanks])
 
 # Assertions for this set up
@@ -685,6 +687,7 @@ settingsFile.write("DropoutKP" + sep + str(args.dropOut) + "\n")
 settingsFile.write("DropoutKPGenes" + sep + str(args.dropOutGenes) + "\n")
 settingsFile.write("momentum" + sep + str(args.momentum) + "\n")
 settingsFile.write("minibatch" + sep + str(args.minibatch) + "\n")
+settingsFile.write("python" + sep + sys.version + "\n")
 settingsFile.close()
 
 
