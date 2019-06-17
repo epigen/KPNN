@@ -718,7 +718,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
         if i > 1: # The first iteration reflects initiation parameters (no training done)
             sess.run(train, {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
     
-    if i < 100 or i % 10 == 0:
+    if i < 10 or i % 10 == 0:
         print("\nTraining epoch: " + str(i))
         
         # Loss, error, etc on training and validation set

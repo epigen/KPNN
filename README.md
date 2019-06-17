@@ -30,6 +30,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  # Clone this repository
 	  git clone https://github.com/epigen/KPNN.git
 	  cd KPNN/
+	  git checkout py3
 	  
 	  # Sets up environmental variables
 	  source setup_example.sh
@@ -47,7 +48,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 # Demo to train one network
 1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget or curl is set up on your system, you can do this using the scripts under Download_Data/.
       ```
-	  sh Download_Data/Download_Data_curl.sh 
+	  sh Download_Data/Download_SIM.sh 
       ```
 2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs, for example:
       ```
