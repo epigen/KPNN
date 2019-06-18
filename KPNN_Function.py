@@ -83,6 +83,7 @@ if len(sys.argv) < 4: # means we are in python shell or the script is run withou
     args.iterations = 5
     args.threads = 1
     args.control = False
+    args.randomSeed=1
 else:           # script is being called from outside with proper arguments
     args = parser.parse_args()
 
@@ -218,8 +219,13 @@ logMem("Data loaded")
 # LOAD Ys and match barcodes to input data --------------------------------------------------------------------------------------------------------------------
 file_y=pd.read_csv(args.inPathYs, sep=",")
 barcodes_y = file_y["barcode"].tolist()
+# print(barcodes_y[0:5])
+# print(set(barcodes_y[0:5]))
+# print(barcodes_x[0:5])
+# print(set(barcodes_x[0:5]))
 # match barcodes:
-barcodes = list(set(barcodes_y) & set(barcodes_x))
+barcodes = sorted(set(barcodes_y) & set(barcodes_x))
+# print(barcodes[0:5])
 assert len(barcodes) == len(set(barcodes)), "BARCODES ARE NOT UNIQUE!"
 print("Number of Barcodes found in Y but not X: " + str(len(set(barcodes_y) - set(barcodes_x))))
 print("Number of Barcodes used: " + str(len(barcodes)))
@@ -229,7 +235,7 @@ open(os.path.join(outPath, "barcodes.txt"),"w").write("\n".join(barcodes))
 # LOAD EDGE LIST and match gene list with input data --------------------------------------------------------------------------------------------------------------------
 edgelistFile=pd.read_csv(args.inPathEdges, sep=",")
 genesList_edges = list(set(edgelistFile['child'].tolist()) - set(edgelistFile['parent'].tolist()))
-genesList = list(set(genesList_x) & set(genesList_edges))
+genesList = sorted(set(genesList_x) & set(genesList_edges))
 print("Number of Genes used: " + str(len(genesList)))
 assert len(genesList) == len(set(genesList)), "genesList non unique!"
 genesListOrig = copy.copy(genesList)
@@ -237,9 +243,9 @@ edgelistFile = edgelistFile[edgelistFile['child'].isin(genesList) | edgelistFile
 open(os.path.join(outPath, "genesList.txt"),"w").write("\n".join(genesList))
 
 # NETWORK OUTPUTS matched between Ys and edgelist --------------------------------------------------------------------------------------------------------------------
-outputs_y = list(set(file_y.columns.tolist()) - set(["barcode"]))
-outputs_edges = list(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
-outputs = list(set(outputs_y) & set(outputs_edges))
+outputs_y = sorted(set(file_y.columns.tolist()) - set(["barcode"]))
+outputs_edges = sorted(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
+outputs = sorted(set(outputs_y) & set(outputs_edges))
 print("Number of Outputs used: " + str(len(outputs))  + " --> " + ",".join(outputs))
 print("\tClass labels: " + ",".join(outputs_y))
 print("\tNetwork outputs: " + ",".join(outputs_edges))
@@ -357,14 +363,14 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
     test_idx = [] if not test_def else test_idx # if the test_idx is already defined then we keep this
     val_idx = []
     train_idx = []
-    for test_grp in set(test_groups):
+    for test_grp in sorted(set(test_groups)):
         # Draw a number from all indices for test and validation set, then draw from those for the validation set only
         # if the test set is predefined, then we still draw barcodes for it, but then do not use them
         test_and_val_group_N = int(((len(test_groups_list[test_grp]) + 0.0)/len(test_groups)) * nrTestCells * 2)
         test_and_val_barcodes=np.random.choice(test_groups_list[test_grp], test_and_val_group_N, replace=False).tolist()
         val_idx_x = np.random.choice(test_and_val_barcodes, int(test_and_val_group_N/2), replace=False).tolist()
-        test_idx_x = list(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
-        train_idx_x = list(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
+        test_idx_x = sorted(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
+        train_idx_x = sorted(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
         # print(and assertions)
         print(test_grp + ": test: " + str(len(test_idx_x)) + " val: " + str(len(val_idx_x)) + " train: " + str(len(train_idx_x)) + " of:  " + str(len(test_groups_list[test_grp])))
         assert len(test_idx_x) + len(val_idx_x) + len(train_idx_x) == len(test_groups_list[test_grp])
@@ -441,7 +447,7 @@ def weightMatrixFromYs(ys_input):
     matrix_groups = ["".join([str(i) for i in x]) for x in np.transpose(ys_input.astype("int")).tolist()]
     matrix_groups_weight={}
     # get factor to multiply by for each group
-    for matrix_grp in set(matrix_groups):
+    for matrix_grp in sorted(set(matrix_groups)):
         matrix_groups_weight[matrix_grp] = (1.0/((matrix_groups.count(matrix_grp) + 0.0) / len(matrix_groups))) / len(set(matrix_groups))
     
     # create a numpy array with the same dimensions as the input
@@ -484,19 +490,18 @@ nodesRanks = []
 edges_ranks = copy.deepcopy(edgelistFile)
 edges_ranks_rows = edges_ranks.shape[0] + 1
 i = 1
-# Cycle through edgelist and add leaves to nodesRanks
-# while we decrease the number of rows each time?
-while edges_ranks.shape[0] < edges_ranks_rows:
+# Cycle through edgelist and add leaves to nodesRanks, thus building up nodesRanks from the bottom
+while edges_ranks.shape[0] < edges_ranks_rows: # stop when no nodes (leaves) were added to the nodesRanks, edges_ranks_rows is edges_ranks.shape[0] at the last iteration
     edges_ranks_rows = edges_ranks.shape[0]
-    leaves = set(edges_ranks['child'].tolist()) - set(edges_ranks['parent'].tolist())
+    leaves = sorted(set(edges_ranks['child'].tolist()) - set(edges_ranks['parent'].tolist())) # Nodes that are only children (not parents) are leaves
     if i > 1:
-        nodesRanks.extend(leaves)
+        nodesRanks.extend(leaves) # leaves are added to the nodes ranks
     else:
         assert set(leaves).issubset(set(genesListOrig)), "Some genes not found in the data!"
-    edges_ranks = edges_ranks.loc[~edges_ranks['child'].isin(leaves)]
+    edges_ranks = edges_ranks.loc[~edges_ranks['child'].isin(leaves)] # remove interactions of leaves
     i += 1
 
-assert edges_ranks.shape[0] == 0, "Edgelist is circular!"
+assert edges_ranks.shape[0] == 0, "Edgelist is circular!" # if there are edges remaining after the above
 # add output nodes to the list
 nodesRanks.extend(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
 
@@ -714,6 +719,7 @@ settingsFile.write("DropoutKPGenes" + sep + str(args.dropOutGenes) + "\n")
 settingsFile.write("momentum" + sep + str(args.momentum) + "\n")
 settingsFile.write("minibatch" + sep + str(args.minibatch) + "\n")
 settingsFile.write("python" + sep + sys.version + "\n")
+settingsFile.write("Seed" + sep + str(args.randomSeed) + "\n")
 settingsFile.close()
 
 
