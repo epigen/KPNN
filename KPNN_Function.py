@@ -99,20 +99,20 @@ if(args.randomSeed is not None):
     np.random.seed(args.randomSeed)
     tf.random.set_random_seed(args.randomSeed)
     
-    #Test random seeds
-    sess2 = tf.Session()
-    weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
-    init = tf.global_variables_initializer()
-    sess2.run(init)
-    print("Tensorflow random number:" + str(sess2.run(weights)))
-    print("Numpy choice:")
-    print(np.random.choice(list(range(1000))))
-    print("Numpy Binomial")
-    print(np.random.binomial(list(range(1000)), 0.4)[200])
-    print("Numpy Shuffle")
-    x = list(range(1000))
-    np.random.shuffle(x)
-    print(x[5])
+    # #Test random seeds
+    # sess2 = tf.Session()
+    # weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
+    # init = tf.global_variables_initializer()
+    # sess2.run(init)
+    # print("Tensorflow random number:" + str(sess2.run(weights)))
+    # print("Numpy choice:")
+    # print(np.random.choice(list(range(1000))))
+    # print("Numpy Binomial")
+    # print(np.random.binomial(list(range(1000)), 0.4)[200])
+    # print("Numpy Shuffle")
+    # x = list(range(1000))
+    # np.random.shuffle(x)
+    # print(x[5])
 
 
 ##############################
@@ -219,13 +219,8 @@ logMem("Data loaded")
 # LOAD Ys and match barcodes to input data --------------------------------------------------------------------------------------------------------------------
 file_y=pd.read_csv(args.inPathYs, sep=",")
 barcodes_y = file_y["barcode"].tolist()
-# print(barcodes_y[0:5])
-# print(set(barcodes_y[0:5]))
-# print(barcodes_x[0:5])
-# print(set(barcodes_x[0:5]))
 # match barcodes:
 barcodes = sorted(set(barcodes_y) & set(barcodes_x))
-# print(barcodes[0:5])
 assert len(barcodes) == len(set(barcodes)), "BARCODES ARE NOT UNIQUE!"
 print("Number of Barcodes found in Y but not X: " + str(len(set(barcodes_y) - set(barcodes_x))))
 print("Number of Barcodes used: " + str(len(barcodes)))
@@ -371,7 +366,6 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
         val_idx_x = np.random.choice(test_and_val_barcodes, int(test_and_val_group_N/2), replace=False).tolist()
         test_idx_x = sorted(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
         train_idx_x = sorted(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
-        # print(and assertions)
         print(test_grp + ": test: " + str(len(test_idx_x)) + " val: " + str(len(val_idx_x)) + " train: " + str(len(train_idx_x)) + " of:  " + str(len(test_groups_list[test_grp])))
         assert len(test_idx_x) + len(val_idx_x) + len(train_idx_x) == len(test_groups_list[test_grp])
         assert len(set(test_idx_x) & set(val_idx_x)) == 0
@@ -382,6 +376,8 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
         val_idx = val_idx + val_idx_x
         train_idx = train_idx + train_idx_x
 
+
+print(test_idx[1:5])
 # Final assertions for the split
 assert len(test_idx) + len(val_idx) + len(train_idx) == len(barcodes), "Error assigning test, training, and validation set"
 assert len(set(test_idx) & set(val_idx)) == 0, "Error assigning test, training, and validation set"
@@ -397,7 +393,9 @@ x_train = fullData[:,train_idx]
 x_val = fullData[:,val_idx]
 x_test = fullData[:,test_idx]
 
-# print(result of draws)
+print(test_idx[1:5])
+
+# print result of draws)
 print("Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])]))
 print("Validation Ys \t(total " + str(y_test.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_test[i,:].sum()) for i in range(y_test.shape[0])]))
 print("Testing Ys \t(total " + str(y_val.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_val[i,:].sum()) for i in range(y_val.shape[0])]))
@@ -761,7 +759,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
         lossTestRes, testWriteContent, testerror, testAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
         testErrRun = testerror.mean()
         
-        # print(and write progress)
+        # print and write progress)
         print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun))
         costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
         costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
