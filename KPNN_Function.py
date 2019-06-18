@@ -69,6 +69,30 @@ parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 
 
 ##############################################
+## RANDOM SEED ###########
+##############################################
+# np.random.seed(1)
+# tf.random.set_random_seed(0)
+#
+# sess2 = tf.Session()
+# weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
+# init = tf.global_variables_initializer()
+# sess2.run(init)
+# print(sess2.run(weights))
+#
+#
+# print("---------")
+# print("Choice:")
+# print(np.random.choice(list(range(1000))))
+# print("Binomial")
+# print(np.random.binomial(list(range(1000)), 0.4)[200])
+# print("Shuffle")
+# x = list(range(1000))
+# np.random.shuffle(x)
+# print(x[5])
+
+
+##############################################
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
 if len(sys.argv) < 4: # means we are in python shell or the script is run without arguments
