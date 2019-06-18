@@ -52,9 +52,10 @@ parser.add_argument('--dropOut', type=float, help="Dropout Keep Probability Node
 parser.add_argument('--dropOutGenes', type=float, help="Dropout Keep Probability Genes", default=1.0)
 parser.add_argument('--disableDropoutAdjust', action='store_true', help="when toggled dropout is not adjusted for child nodes of parent nodes with few childen")
 
-# Control / shuffle /...
+# Control / shuffle /set seed /
 parser.add_argument('--shuffleGenes', action='store_true', help="Shuffle gene expression")
 parser.add_argument('--control', action='store_true', help="Run on control data (all genes are predictive)")
+parser.add_argument('--randomSeed', type=int, help='Seed to set for numpy and tensorflow (this only works in python2 for some reason)')
 
 # Tracking
 parser.add_argument('--tfWrite', action='store_true', help="Write train and test summaries")
@@ -66,30 +67,6 @@ parser.add_argument('--disableNumGrad', action='store_true', help="Do not perfor
 # Computing limits
 parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 
-
-
-##############################################
-## RANDOM SEED ###########
-##############################################
-# np.random.seed(1)
-# tf.random.set_random_seed(0)
-#
-# sess2 = tf.Session()
-# weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
-# init = tf.global_variables_initializer()
-# sess2.run(init)
-# print(sess2.run(weights))
-#
-#
-# print("---------")
-# print("Choice:")
-# print(np.random.choice(list(range(1000))))
-# print("Binomial")
-# print(np.random.binomial(list(range(1000)), 0.4)[200])
-# print("Shuffle")
-# x = list(range(1000))
-# np.random.shuffle(x)
-# print(x[5])
 
 
 ##############################################
@@ -113,9 +90,34 @@ print(args)
 
 
 
+##############################################
+## RANDOM SEED ###########
+##############################################
+if(args.randomSeed is not None):
+    print("----------------\n...Setting random seed")
+    np.random.seed(args.randomSeed)
+    tf.random.set_random_seed(args.randomSeed)
+    
+    #Test random seeds
+    sess2 = tf.Session()
+    weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
+    init = tf.global_variables_initializer()
+    sess2.run(init)
+    print("Tensorflow random number:" + str(sess2.run(weights)))
+    print("Numpy choice:")
+    print(np.random.choice(list(range(1000))))
+    print("Numpy Binomial")
+    print(np.random.binomial(list(range(1000)), 0.4)[200])
+    print("Numpy Shuffle")
+    x = list(range(1000))
+    np.random.shuffle(x)
+    print(x[5])
+
+
 ##############################
 ## SETUP ARGUMENTS ###########
 ##############################
+print("----------------\n...Processing arguments")
 # ADAM
 doADAM = True
 if args.momentum > 0: doADAM = False
