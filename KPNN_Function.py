@@ -95,8 +95,13 @@ print(args)
 ##############################################
 if(args.randomSeed is not None):
     print("----------------\n...Setting random seed")
+    
+    assert args.randomSeed != 0, "Do not set seed to 0, chose a larger integer number"
+    
     np.random.seed(args.randomSeed)
     tf.random.set_random_seed(args.randomSeed)
+    os.environ['PYTHONHASHSEED'] = str(args.randomSeed)
+    random.seed(args.randomSeed)
     
     # #Test random seeds
     # sess2 = tf.Session()
