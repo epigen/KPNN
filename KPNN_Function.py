@@ -23,7 +23,7 @@ import gc
 parser = argparse.ArgumentParser(description='Neural network.')
 
 # Inputs
-parser.add_argument('inPathData', type=str, help='path to data file')
+parser.add_argument('inPathData', type=str, help='path to data file (.csv or .h5)')
 parser.add_argument('inPathEdges', type=str, help='path to edges file')
 parser.add_argument('inPathYs', type=str, help='path to output (ys) file')
 parser.add_argument('outPath', type=str, help='path to output folder (must exist)')
@@ -83,7 +83,6 @@ if len(sys.argv) < 4: # means we are in python shell or the script is run withou
     args.iterations = 5
     args.threads = 1
     args.control = False
-    args.randomSeed=1
 else:           # script is being called from outside with proper arguments
     args = parser.parse_args()
 
@@ -171,9 +170,9 @@ def get_matrix_from_h5(filename, genome):
         except tables.NoSuchNodeError:
             print("That genome does not exist in this file.")
             return None
-        gene_ids = getattr(group, 'genes').read()
-        gene_names = getattr(group, 'gene_names').read()
-        barcodes = getattr(group, 'barcodes').read()
+        gene_ids = getattr(group, 'genes').read().astype(str)
+        gene_names = getattr(group, 'gene_names').read().astype(str)
+        barcodes = getattr(group, 'barcodes').read().astype(str)
         data = getattr(group, 'data').read()
         indices = getattr(group, 'indices').read()
         indptr = getattr(group, 'indptr').read()
@@ -182,7 +181,6 @@ def get_matrix_from_h5(filename, genome):
         return GeneBCMatrix(gene_ids, gene_names, barcodes, matrix)
 
 def indexInList(l2, l1):
-    assert len(set(l1)) == len(l1), "Provided list contains duplicated elements"
     ref={}
     res=[]
     for idx, x in enumerate(l1):
