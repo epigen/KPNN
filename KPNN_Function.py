@@ -29,7 +29,7 @@ parser.add_argument('inPathYs', type=str, help='path to output (ys) file')
 parser.add_argument('outPath', type=str, help='path to output folder (must exist)')
 
 # Data / Normalization
-parser.add_argument('--genome', type=str, help='genome in hdf5 file, is guessed by default', default="")
+parser.add_argument('--genome', type=str, help='genome in hdf5 file, is guessed by default')
 parser.add_argument('--normalizedMatrix', action='store_false', help="do TPM, log of each cell")
 parser.add_argument('--normalizedMatrix01', action='store_false', help="do 0-1 normalization of each gene")
 parser.add_argument('--maxCells', type=float, help="How many cells can be run at once", default=100000)
@@ -101,7 +101,7 @@ if(args.randomSeed is not None):
     np.random.seed(args.randomSeed)
     tf.random.set_random_seed(args.randomSeed)
     os.environ['PYTHONHASHSEED'] = str(args.randomSeed)
-    random.seed(args.randomSeed)
+    rd.seed(args.randomSeed)
     
     # #Test random seeds
     # sess2 = tf.Session()
@@ -205,7 +205,7 @@ if re.match(".+csv$", args.inPathData) is not None:
     barcodes_x = df.columns.tolist()
     fullData = sp_sparse.csc_matrix(df.as_matrix().astype("float64"))
 elif re.match(".+h5$", args.inPathData) is not None:
-    if args.genome == "":
+    if args.genome is None: # Gess genome from file
         h5f = tables.open_file(args.inPathData, 'r')
         args.genome = h5f.list_nodes(h5f.root)[0]._v_name
         h5f.close()
@@ -713,14 +713,10 @@ costFile.close()
 
 # Settings
 settingsFile = open(os.path.join(outPath, "tf_settings.csv"),"w")
-settingsFile.write("alpha" + sep + str(args.alpha) + "\n")
-settingsFile.write("lambda" + sep + str(args.lambd) + "\n")
-settingsFile.write("DropoutKP" + sep + str(args.dropOut) + "\n")
-settingsFile.write("DropoutKPGenes" + sep + str(args.dropOutGenes) + "\n")
-settingsFile.write("momentum" + sep + str(args.momentum) + "\n")
-settingsFile.write("minibatch" + sep + str(args.minibatch) + "\n")
-settingsFile.write("python" + sep + sys.version + "\n")
-settingsFile.write("Seed" + sep + str(args.randomSeed) + "\n")
+settingsDict = vars(args)
+for argsKey in settingsDict.keys():
+    settingsFile.write(argsKey + sep + str(settingsDict[argsKey]) + "\n")
+settingsFile.write("python" + sep + sys.version.replace("\n", " ") + "\n")
 settingsFile.close()
 
 
@@ -761,13 +757,7 @@ for i in [xx + 1 for xx in range(args.iterations)]:
         lossRes, trainClassProb, trainWriteContent = sess.run([loss, y_hat, merged], {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
         lossTestRes, testWriteContent, testerror, testAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
         testErrRun = testerror.mean()
-        
-        # print and write progress)
-        print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun))
-        costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
-        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
-        costFile.close()
-        
+                
         # Tensorboard output
         if args.tfWrite:
             train_writer.add_summary(trainWriteContent, i)
@@ -779,8 +769,13 @@ for i in [xx + 1 for xx in range(args.iterations)]:
                 breakCounter += 1
             if any(testErrPrevious + 0.05 < testErrRun for testErrPrevious in testErr): # if test error goes up
                 breakCounter += 1
-        
+                
+        # print and write progress)
+        print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun))
         print("Break Counter = " + str(breakCounter))
+        costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
+        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
+        costFile.close()
         
         if breakCounter > args.maxBreakCount:
             break
