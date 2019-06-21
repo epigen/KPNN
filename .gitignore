@@ -37,9 +37,11 @@ rsconnect/
 
 outputs/
 Outputs/
+TrainedKPNNs/
 
 inputs/
 Inputs/
+InputData/
 
 Analysis/
 
