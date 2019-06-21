@@ -1,16 +1,20 @@
 #!/bin/bash
 
-# Point to where you want input and output data to go
-export KPNN_ROOT=$PWD
 # Point to the base of the github repository
 export KPNN_CODEBASE=$PWD
 
-# These will be populated automatically but can also be adjusted
-export KPNN_OUTPUTS=$KPNN_ROOT/Outputs/
-export KPNN_INPUTS=$KPNN_ROOT/Inputs/
-export KPNN_DEMOS=$KPNN_ROOT/Demos/
-
-mkdir -p $KPNN_ROOT
-mkdir -p $KPNN_OUTPUTS
+# Where input data are saved (expression data, edgelists, class labels)
+export KPNN_INPUTS=$PWD/Inputs/         
 mkdir -p $KPNN_INPUTS
+
+# Where outputs are saved (trained KPNNs)
+export KPNN_OUTPUTS=$PWD/Outputs/       
+mkdir -p $KPNN_OUTPUTS
+
+# Results of demo runs
+export KPNN_DEMOS=$PWD/Demos/           
 mkdir -p $KPNN_DEMOS
+
+# Results of Analyses of KPNN outputs
+export KPNN_ANALYSES=$PWD/Analysis/     
+mkdir -p $KPNN_ANALYSES
