@@ -19,7 +19,7 @@ option_list = list(
 opt_parser = OptionParser(usage = usage, option_list=option_list);
 args <- parse_args(opt_parser, positional_arguments = 1)
 opt  <- args$options    # Parameters
-fx <- args$args[1]      # output location
+fx <- paste0(args$args[1], "/")      # output location
 
 # opt <- list()
 # opt$nOutputs <- 2

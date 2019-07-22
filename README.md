@@ -34,14 +34,14 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  git checkout py3
 	  
 	  # Sets up environmental variables
-	  source setup_example.sh
+	  source Demo_setup.sh
 
 	  # Install requirements (python and R)
 	  pip install -r Requirements_python.txt
 	  Rscript Requirements_R.R
 
 	  # Generate test data and run test
-	  Rscript Generate_test_data.R
+	  Rscript Test_Data.R $KPNN_INPUTS
 	  python KPNN_Function.py
       ```
 5. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete and KPNN training works.
