@@ -4,28 +4,32 @@ require(data.table,quietly = TRUE)
 require(optparse,quietly = TRUE)
 
 message("------------")
-usage=paste(getopt::get_Rscript_filename(), "[options] file")
+usage=paste(getopt::get_Rscript_filename(), "[options] OutFile")
 message(paste("Usage: ", usage))
 
 # Parse options
 option_list = list(
   make_option(c("--nInputs"), type="integer", default=20,help="Number of inputs (genes)", metavar="integer"),
-  make_option(c("--nOutputs"), type="integer", default=2,help="Number of outputs (class labels)", metavar="integer"),
-  make_option(c("--nNodes"), type="integer", default=2,help="Number of nodes", metavar="integer"),
-  make_option(c("--nSamples"), type="integer", default=100,help="Number of samples (cells)", metavar="integer")
+  make_option(c("--nOutputs"), type="integer", default=3,help="Number of outputs (class labels)", metavar="integer"),
+  make_option(c("--nNodes"), type="integer", default=5,help="Number of nodes", metavar="integer"),
+  make_option(c("--nSamples"), type="integer", default=100,help="Number of samples (cells)", metavar="integer"),
+  make_option(c("--Seed"), type="integer", default=NA,help="Seed for random sampling", metavar="integer")
 )
 
 opt_parser = OptionParser(usage = usage, option_list=option_list);
 args <- parse_args(opt_parser, positional_arguments = 1)
-opt  <- args$options
-fx <- args$args
+opt  <- args$options    # Parameters
+fx <- args$args[1]      # output location
 
 # opt <- list()
 # opt$nOutputs <- 2
 # opt$nNodes <- 2
 # opt$nInputs <- 20
 # opt$nSamples <- 100
+# opt$Seed <- NA
 # fx <- "~/KPNN/KPNN/Inputs/"
+
+if(!is.na(opt$Seed)) set.seed(opt$Seed)
 
 # Name elements
 outputs = paste0("output", 1:opt$nOutputs)

@@ -23,6 +23,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  # pip install virtualenv # if not installed yet
 	  mkdir virtenv
 	  virtualenv virtenv --no-site-packages
+	  # for python 3 specifically: virtualenv virtenv --no-site-packages -p python3
 	  source virtenv/bin/activate
       ```
 4. Installation instructions:
