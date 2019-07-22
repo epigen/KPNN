@@ -68,21 +68,19 @@ parser.add_argument('--disableNumGrad', action='store_true', help="Do not perfor
 parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 
 
-
 ##############################################
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
-if len(sys.argv) < 4: # means we are in python shell or the script is run without arguments
+if int(list(reversed([i[:2] for i in sys.argv])).index("--")) <= 3: # means we are in python shell or the script is run without arguments
     args = parser.parse_args([
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_ClassLabels.csv",
         os.environ['TMPDIR']
-    ])
+    ] + sys.argv[1:])
     args.lambd = 0.01
     args.iterations = 5
     args.threads = 1
-    args.control = False
 else:           # script is being called from outside with proper arguments
     args = parser.parse_args()
 
