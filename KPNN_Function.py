@@ -71,7 +71,9 @@ parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 ##############################################
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
+print(sys.argv)
 if int(list(reversed([i[:2] for i in sys.argv])).index("--")) <= 3: # means we are in python shell or the script is run without arguments
+    print("Manually setting arguments to demo data")
     args = parser.parse_args([
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
