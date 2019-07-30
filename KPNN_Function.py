@@ -708,7 +708,7 @@ saver = tf.train.Saver()
 merged = tf.summary.merge_all()
 if args.tfWrite:
     train_writer = tf.summary.FileWriter(outPath + '/train', sess.graph)
-    test_writer = tf.summary.FileWriter(outPath + '/test', sess.graph)
+    val_writer = tf.summary.FileWriter(outPath + '/val', sess.graph)
 
 # Cost output (Track progress)
 costFile = open(os.path.join(outPath, "tf_cost.csv"),"w")
@@ -731,8 +731,8 @@ settingsFile.close()
 print("----------------\n...Starting training")
 # training iterations
 trainCost = []
-testErr = []
-testErrCurrentMin = 1
+valErr = []
+valErrCurrentMin = 1
 breakCounter = 0
 start = time.time()
 logMem("Prepared Training")
@@ -759,40 +759,40 @@ for i in [xx + 1 for xx in range(args.iterations)]:
         
         # Loss, error, etc on training and validation set
         lossRes, trainClassProb, trainWriteContent = sess.run([loss, y_hat, merged], {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
-        lossTestRes, testWriteContent, testerror, testAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
-        testErrRun = testerror.mean()
+        lossValRes, valWriteContent, valerror, valAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
+        valErrRun = valerror.mean()
                 
         # Tensorboard output
         if args.tfWrite:
             train_writer.add_summary(trainWriteContent, i)
-            test_writer.add_summary(testWriteContent, i)
+            val_writer.add_summary(valWriteContent, i)
         
         # Early stopping
         if i > 10 and not args.disableInterrupt:
             if trainCost[-1] - lossRes < 0.00001: # if the general error goes up or stays equal
                 breakCounter += 1
-            if any(testErrPrevious + 0.05 < testErrRun for testErrPrevious in testErr): # if test error goes up
+            if any(valErrPrevious + 0.05 < valErrRun for valErrPrevious in valErr): # if val error goes up
                 breakCounter += 1
                 
         # print and write progress)
-        print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun))
+        print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossValRes + " Validation error: " + str(valErrRun))
         print("Break Counter = " + str(breakCounter))
         costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
-        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
+        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossValRes) + sep + str(valErrRun) + sep + str(valAccuracy.mean()) + sep + str(breakCounter) + "\n")
         costFile.close()
         
         if breakCounter > args.maxBreakCount:
             break
         
         # Save model
-        if i > 2 and (testErrRun < 0.2 and testErrCurrentMin * args.minImprovement > testErrRun):
+        if i > 2 and (valErrRun < 0.2 and valErrCurrentMin * args.minImprovement > valErrRun):
             breakCounter = 0
             saver.save(sess, os.path.join(outPath,'best-model'))
-            testErrCurrentMin = testErrRun
-            print("Model saved at iteration " + str(i) + " at Test error: " + str(testErrRun))
+            valErrCurrentMin = valErrRun
+            print("Model saved at iteration " + str(i) + " at Validation error: " + str(valErrRun))
         
         trainCost.append(lossRes)
-        testErr.append(testErrRun)
+        valErr.append(valErrRun)
     
 
 # DONE
@@ -813,24 +813,24 @@ if os.path.exists(os.path.join(outPath,'best-model.meta')):
 logMem("Loaded Best Model")
 
 # Write out Test Error with loaded model
-valErrNumGrad = sess.run(error, {genesOrig:x_test, y_true:y_test, y_weights:y_test_weights}).mean()
-print("Test Error before Numerical Gradient = " + str(valErrNumGrad))
-open(os.path.join(outPath, "tf_NumGradTestError.txt"),"w").write("NumGradTestError" + "\n" + str(valErrNumGrad))
+testErrNumGrad = sess.run(error, {genesOrig:x_test, y_true:y_test, y_weights:y_test_weights}).mean()
+print("Test Error before Numerical Gradient = " + str(testErrNumGrad))
+open(os.path.join(outPath, "tf_NumGradTestError.txt"),"w").write("NumGradTestError" + "\n" + str(testErrNumGrad))
 
 
 # Write y hat to file
-val_y_hat = sess.run(y_hat, {genesOrig:x_test, y_true:y_test})
+test_y_hat = sess.run(y_hat, {genesOrig:x_test, y_true:y_test})
 print("----------------\n...Writing y hat to file")
-val_y_hat_file = open(os.path.join(outPath, "tf_yHat_test.csv"),"w")
-val_y_hat_file.write(",".join(outputs) + "\n")
-val_y_hat_file.write(pd.DataFrame(np.transpose(val_y_hat)).to_csv(header=False, index=False))
-val_y_hat_file.close()
+test_y_hat_file = open(os.path.join(outPath, "tf_yHat_test.csv"),"w")
+test_y_hat_file.write(",".join(outputs) + "\n")
+test_y_hat_file.write(pd.DataFrame(np.transpose(test_y_hat)).to_csv(header=False, index=False))
+test_y_hat_file.close()
 
 # Write y true to file
-val_y_hat_file = open(os.path.join(outPath, "tf_yTrue_test.csv"),"w")
-val_y_hat_file.write(",".join(outputs) + "\n")
-val_y_hat_file.write(pd.DataFrame(np.transpose(y_test.astype("int"))).to_csv(header=False, index=False))
-val_y_hat_file.close()
+test_y_true_file = open(os.path.join(outPath, "tf_yTrue_test.csv"),"w")
+test_y_true_file.write(",".join(outputs) + "\n")
+test_y_true_file.write(pd.DataFrame(np.transpose(y_test.astype("int"))).to_csv(header=False, index=False))
+test_y_true_file.close()
 
 logMem("Tensorflow results accuracy")
 
