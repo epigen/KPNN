@@ -27,6 +27,7 @@ parser.add_argument('inPathData', type=str, help='path to data file (.csv or .h5
 parser.add_argument('inPathEdges', type=str, help='path to edges file')
 parser.add_argument('inPathYs', type=str, help='path to output (ys) file')
 parser.add_argument('outPath', type=str, help='path to output folder (must exist)')
+parser.add_argument('--dryRun', action='store_true', help="Runs a dry run, experimental") # TODO more specific?
 
 # Data / Normalization
 parser.add_argument('--genome', type=str, help='genome in hdf5 file, is guessed by default')
@@ -71,7 +72,11 @@ parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 ##############################################
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
-if int(list(reversed([i[:2] for i in sys.argv])).index("--")) <= 3: # means we are in python shell or the script is run without arguments
+print(sys.argv)
+args_dry="--dryRun" in sys.argv
+#args_too_few=len(sys.argv) <= 4
+#int(list(reversed([i[:2] for i in sys.argv])).index("--")) <= 3
+if args_dry or sys.argv == [''] or sys.argv == [__file__]: # means that we (i) called a dry run, (ii) are within the python shell, or (iii) called the script without parameters
     args = parser.parse_args([
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",

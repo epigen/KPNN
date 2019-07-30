@@ -48,7 +48,7 @@ for(i in 1:nrow(settings)){
     settings[i, TestError := NA]
   }
 }
-
+write.tsv(settings, file = paste0(output.folder, "/", "MetaData.tsv"))
 
 # Load Node weights -------------------------------------------------------
 nodeWeights <- data.table()
@@ -66,7 +66,7 @@ nodeWeights <- nodeWeights[!is.na(value)]
 
 # Output a matrix of node weights and a table of meta information -------------------------------------------------------
 if(length(outputs) == 1){
-  write.tsv(settings, file = paste0(output.folder, "/", "MetaData.tsv"))
+  #write.tsv(settings, file = paste0(output.folder, "/", "MetaData.tsv"))
   write.csv(toMT(nodeWeights, row = "Node", col="replicate", val = "value"), file = paste0(output.folder, "/", "NodeWeights.csv"), quote=F)
 } else {
   nodeWeights[,id := paste0(replicate, "_", variable)]
