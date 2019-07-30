@@ -720,6 +720,7 @@ settingsFile = open(os.path.join(outPath, "tf_settings.csv"),"w")
 settingsDict = vars(args)
 for argsKey in settingsDict.keys():
     settingsFile.write(argsKey + sep + str(settingsDict[argsKey]) + "\n")
+
 settingsFile.write("python" + sep + sys.version.replace("\n", " ") + "\n")
 settingsFile.close()
 
@@ -852,6 +853,20 @@ for n in nodesRanks:
     weightFile.write(n + sep + "Intercept" + sep + str(interceptRes[nodesRanks.index(n)]) + "\n")
 
 weightFile.close()
+
+# Node activations for each sample of each output
+nacs_dict={}
+for i,oo in enumerate(outputs):
+    nacs = sess.run(nodes, {genesOrig:x_test[:,np.where(y_test[i,:] == 1)[0]]})
+    nacs_dict[oo] = [x.mean() for x in nacs.values()]
+
+nodeActFile = open(os.path.join(outPath, "tf_NodeActivations.csv"),"w")
+sep = ","
+nodeActFile.write("Node" + sep + sep.join(outputs) + "\n")
+for i,n in enumerate(nodes.keys()):
+    nodeActFile.write(n + sep + sep.join([str(nacs_dict[oo][i]) for oo in outputs]) + "\n")
+
+nodeActFile.close()
 
 
 
