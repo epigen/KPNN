@@ -48,25 +48,50 @@ for(i in 1:nrow(settings)){
     settings[i, TestError := NA]
   }
 }
-write.tsv(settings, file = paste0(output.folder, "/", "MetaData.tsv"))
+write.tsv(settings, file = paste0(output.folder, "/", "MetaData_byRun.tsv"))
+
+
+# Get iterations and worst step from cost files (training curves) ----------------------------------------------------------
+i <- 1
+for(i in 1:nrow(settings)){
+  cost.data <- tryCatch(fread(paste0(settings[i]$file, "/tf_cost.csv")), error = function(e){message("Failed to read training curve (tf_cost.csv): ", e)})
+  settings[i,iterations := cost.data[nrow(cost.data)]$iteration]
+  settings[i,worstStep := min(cost.data$error[1:(nrow(cost.data)-1)] - cost.data$error[2:nrow(cost.data)])]
+}
+
+
+# Get time for training from Memory file ----------------------------------------------------------
+i <- 1
+for(i in 1:nrow(settings)){
+  mem.file <- tryCatch(fread(paste0(settings[i]$file, "/Memory.tsv")), error = function(e){message("Failed to read memory file: ", e)})
+  mem.file[, TimePOSX := as.POSIXct(Time)]
+  time.diff.sec <- as.numeric(mem.file[Step == "Trained Tensorflow"]$TimePOS - mem.file[Step == "Prepared Training"]$TimePOSX, units = "secs")
+  settings[i,time.diff.seconds := time.diff.sec]
+}
+
 
 # Load Node weights -------------------------------------------------------
 nodeWeights <- data.table()
 outputs <- c()
+i <- 1
 for(i in 1:nrow(settings)){
   te <- tryCatch(fread(paste0(settings[i]$file, "/tf_NumGradMeans.csv")), error = function(e){message("Failed to read Node Weights: ", e)})
   te.outputs <- tryCatch(fread(paste0(settings[i]$file, "/outputs.txt"), header = F), error = function(e){message("Failed to read outputs: ", e)})
   outputs <- unique(c(outputs, te.outputs$V1))
   te$file <- settings[i]$file
   te$replicate <- settings[i]$replicate
-  nodeWeights <- rbind(nodeWeights, te)
+  nodeWeights <- rbind(nodeWeights, te, fill=TRUE)
+}
+for(cc in c("Node", outputs)){
+  if(is.null(nodeWeights[[cc]])) nodeWeights[[cc]] <- NA
 }
 nodeWeights <- melt(nodeWeights, measure.vars = outputs, id.vars = c("Node", "replicate", "file"))
-nodeWeights <- nodeWeights[!is.na(value)]
+#nodeWeights <- nodeWeights[!is.na(value)]
+
 
 # Output a matrix of node weights and a table of meta information -------------------------------------------------------
 if(length(outputs) == 1){
-  #write.tsv(settings, file = paste0(output.folder, "/", "MetaData.tsv"))
+  write.tsv(settings, file = paste0(output.folder, "/", "NodeWeights_MetaData.tsv"))
   write.csv(toMT(nodeWeights, row = "Node", col="replicate", val = "value"), file = paste0(output.folder, "/", "NodeWeights.csv"), quote=F)
 } else {
   nodeWeights[,id := paste0(replicate, "_", variable)]
@@ -77,7 +102,7 @@ if(length(outputs) == 1){
     xx <- unique(nodeWeights[replicate == settings[i]$replicate][,c("replicate", "variable", "id")])
     settings2 <- rbind(settings2, data.table(settings[i][,-"replicate"], replicate = xx$id, outputNode=xx$variable))
   }
-  write.tsv(settings2, file = paste0(output.folder, "/", "MetaData.tsv"))
+  write.tsv(settings2, file = paste0(output.folder, "/", "NodeWeights_MetaData.tsv"))
 }
 
 message("\nSuccessfully collected output from folder: ", input.folder, " and stored it in folder: ", output.folder)
