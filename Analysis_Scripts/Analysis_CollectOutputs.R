@@ -13,7 +13,9 @@ message(paste("Usage: ", usage))
 opt_parser = OptionParser(usage = usage);
 args <- parse_args(opt_parser, positional_arguments = 2)
 input.folder <- args$args[1]
+# input.folder <- "~/projects_shared/pathway_learning/results_analysis/46_03_TCR_opt/"
 output.folder <- args$args[2]
+# output.folder <- "~/projects_shared/pathway_learning/results_analysis/46_03_TCR_opt/"
 if(!dir.exists(input.folder)) message("Missing folder of trained KPNNs :", input.folder, " please provide an existing folder")
 print(paste("Processing trained KPNNs from folder:", input.folder))
 dir.create(output.folder,recursive = TRUE)
@@ -55,19 +57,21 @@ write.tsv(settings, file = paste0(output.folder, "/", "MetaData_byRun.tsv"))
 i <- 1
 for(i in 1:nrow(settings)){
   cost.data <- tryCatch(fread(paste0(settings[i]$file, "/tf_cost.csv")), error = function(e){message("Failed to read training curve (tf_cost.csv): ", e)})
-  settings[i,iterations := cost.data[nrow(cost.data)]$iteration]
+  settings[i,final.iterations := cost.data[nrow(cost.data)]$iteration]
   settings[i,worstStep := min(cost.data$error[1:(nrow(cost.data)-1)] - cost.data$error[2:nrow(cost.data)])]
 }
-
+write.tsv(settings, file = paste0(output.folder, "/", "MetaData_byRun.tsv"))
 
 # Get time for training from Memory file ----------------------------------------------------------
-i <- 1
+i <- 728
 for(i in 1:nrow(settings)){
   mem.file <- tryCatch(fread(paste0(settings[i]$file, "/Memory.tsv")), error = function(e){message("Failed to read memory file: ", e)})
   mem.file[, TimePOSX := as.POSIXct(Time)]
   time.diff.sec <- as.numeric(mem.file[Step == "Trained Tensorflow"]$TimePOS - mem.file[Step == "Prepared Training"]$TimePOSX, units = "secs")
+  if(length(time.diff.sec) == 0)time.diff.sec <- NA 
   settings[i,time.diff.seconds := time.diff.sec]
 }
+write.tsv(settings, file = paste0(output.folder, "/", "MetaData_byRun.tsv"))
 
 
 # Load Node weights -------------------------------------------------------
