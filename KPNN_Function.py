@@ -2,7 +2,6 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 import re
-import re
 import sys
 import time
 import io
@@ -24,13 +23,14 @@ import gc
 parser = argparse.ArgumentParser(description='Neural network.')
 
 # Inputs
-parser.add_argument('inPathData', type=str, help='path to data file')
+parser.add_argument('inPathData', type=str, help='path to data file (.csv or .h5)')
 parser.add_argument('inPathEdges', type=str, help='path to edges file')
 parser.add_argument('inPathYs', type=str, help='path to output (ys) file')
 parser.add_argument('outPath', type=str, help='path to output folder (must exist)')
+parser.add_argument('--dryRun', action='store_true', help="Runs a dry run, experimental") # TODO more specific?
 
 # Data / Normalization
-parser.add_argument('--genome', type=str, help='genome in hdf5 file, is guessed by default', default="")
+parser.add_argument('--genome', type=str, help='genome in hdf5 file, is guessed by default')
 parser.add_argument('--normalizedMatrix', action='store_false', help="do TPM, log of each cell")
 parser.add_argument('--normalizedMatrix01', action='store_false', help="do 0-1 normalization of each gene")
 parser.add_argument('--maxCells', type=float, help="How many cells can be run at once", default=100000)
@@ -53,9 +53,10 @@ parser.add_argument('--dropOut', type=float, help="Dropout Keep Probability Node
 parser.add_argument('--dropOutGenes', type=float, help="Dropout Keep Probability Genes", default=1.0)
 parser.add_argument('--disableDropoutAdjust', action='store_true', help="when toggled dropout is not adjusted for child nodes of parent nodes with few childen")
 
-# Control / shuffle /...
+# Control / shuffle /set seed /
 parser.add_argument('--shuffleGenes', action='store_true', help="Shuffle gene expression")
 parser.add_argument('--control', action='store_true', help="Run on control data (all genes are predictive)")
+parser.add_argument('--randomSeed', type=int, help='Seed to set for numpy and tensorflow (this only works in python2 for some reason)')
 
 # Tracking
 parser.add_argument('--tfWrite', action='store_true', help="Write train and test summaries")
@@ -68,31 +69,63 @@ parser.add_argument('--disableNumGrad', action='store_true', help="Do not perfor
 parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 
 
-
 ##############################################
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
-if len(sys.argv) < 4: # means we are in python shell or the script is run without arguments
+print(sys.argv)
+args_dry="--dryRun" in sys.argv # not implemented, maybe for later
+if args_dry or sys.argv == [''] or sys.argv == [__file__]: # means that we (i) called a dry run, (ii) are within the python shell, or (iii) called the script without parameters
+    print("Manually setting arguments to demo data")
+    assert 'KPNN_INPUTS' in os.environ.keys(), 'KPNN_INPUTS needs to be defined when running KPNNs without defining required inputs, run with -h flag to read the help menue'
     args = parser.parse_args([
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_ClassLabels.csv",
         os.environ['TMPDIR']
-    ])
+    ] + sys.argv[1:])
     args.lambd = 0.01
     args.iterations = 5
     args.threads = 1
-    args.control = False
 else:           # script is being called from outside with proper arguments
     args = parser.parse_args()
 
-print args
+print(args)
 
+
+
+##############################################
+## RANDOM SEED ###########
+##############################################
+if(args.randomSeed is not None):
+    print("----------------\n...Setting random seed")
+    
+    assert args.randomSeed != 0, "Do not set seed to 0, chose a larger integer number"
+    
+    np.random.seed(args.randomSeed)
+    tf.random.set_random_seed(args.randomSeed)
+    os.environ['PYTHONHASHSEED'] = str(args.randomSeed)
+    rd.seed(args.randomSeed)
+    
+    # #Test random seeds
+    # sess2 = tf.Session()
+    # weights = tf.Variable(tf.random_normal([1,1], dtype=tf.float64, name="Random_weights"), name="Weights",dtype=tf.float64)
+    # init = tf.global_variables_initializer()
+    # sess2.run(init)
+    # print("Tensorflow random number:" + str(sess2.run(weights)))
+    # print("Numpy choice:")
+    # print(np.random.choice(list(range(1000))))
+    # print("Numpy Binomial")
+    # print(np.random.binomial(list(range(1000)), 0.4)[200])
+    # print("Numpy Shuffle")
+    # x = list(range(1000))
+    # np.random.shuffle(x)
+    # print(x[5])
 
 
 ##############################
 ## SETUP ARGUMENTS ###########
 ##############################
+print("----------------\n...Processing arguments")
 # ADAM
 doADAM = True
 if args.momentum > 0: doADAM = False
@@ -100,12 +133,12 @@ if args.momentum > 0: doADAM = False
 # Dropout on nodes
 doDropout = args.dropOut < 1
 if doDropout: 
-    print "Using dropout on Nodes " + str(args.dropOut)
+    print("Using dropout on Nodes " + str(args.dropOut))
 
 # Dropout on genes
 doDropoutGenes = args.dropOutGenes < 1
 if doDropoutGenes: 
-    print "Using dropout on Genes " + str(args.dropOutGenes)
+    print("Using dropout on Genes " + str(args.dropOutGenes))
 
 # Figure out where to put output
 if not os.path.exists(args.outPath):
@@ -134,7 +167,7 @@ logMem("Start")
 ##############################
 ## LOAD ALL DATA #############
 ##############################
-print "----------------\n...Loading Data"
+print("----------------\n...Loading Data")
 
 # SET UP FUNCTIONS TO LOAD DATA --------------------------------------------------------------------------------------------------------------------
 GeneBCMatrix = collections.namedtuple('GeneBCMatrix', ['gene_ids', 'gene_names', 'barcodes', 'matrix'])
@@ -143,11 +176,11 @@ def get_matrix_from_h5(filename, genome):
         try:
             group = f.get_node(f.root, genome)
         except tables.NoSuchNodeError:
-            print "That genome does not exist in this file."
+            print("That genome does not exist in this file.")
             return None
-        gene_ids = getattr(group, 'genes').read()
-        gene_names = getattr(group, 'gene_names').read()
-        barcodes = getattr(group, 'barcodes').read()
+        gene_ids = getattr(group, 'genes').read().astype(str)
+        gene_names = getattr(group, 'gene_names').read().astype(str)
+        barcodes = getattr(group, 'barcodes').read().astype(str)
         data = getattr(group, 'data').read()
         indices = getattr(group, 'indices').read()
         indptr = getattr(group, 'indptr').read()
@@ -175,7 +208,7 @@ if re.match(".+csv$", args.inPathData) is not None:
     barcodes_x = df.columns.tolist()
     fullData = sp_sparse.csc_matrix(df.as_matrix().astype("float64"))
 elif re.match(".+h5$", args.inPathData) is not None:
-    if args.genome == "":
+    if args.genome is None: # Gess genome from file
         h5f = tables.open_file(args.inPathData, 'r')
         args.genome = h5f.list_nodes(h5f.root)[0]._v_name
         h5f.close()
@@ -193,30 +226,30 @@ logMem("Data loaded")
 file_y=pd.read_csv(args.inPathYs, sep=",")
 barcodes_y = file_y["barcode"].tolist()
 # match barcodes:
-barcodes = list(set(barcodes_y) & set(barcodes_x))
+barcodes = sorted(set(barcodes_y) & set(barcodes_x))
 assert len(barcodes) == len(set(barcodes)), "BARCODES ARE NOT UNIQUE!"
-print "Number of Barcodes found in Y but not X: " + str(len(set(barcodes_y) - set(barcodes_x)))
-print "Number of Barcodes used: " + str(len(barcodes))
+print("Number of Barcodes found in Y but not X: " + str(len(set(barcodes_y) - set(barcodes_x))))
+print("Number of Barcodes used: " + str(len(barcodes)))
 file_y=file_y.loc[indexInList(barcodes, barcodes_y)]
 open(os.path.join(outPath, "barcodes.txt"),"w").write("\n".join(barcodes))
 
 # LOAD EDGE LIST and match gene list with input data --------------------------------------------------------------------------------------------------------------------
 edgelistFile=pd.read_csv(args.inPathEdges, sep=",")
 genesList_edges = list(set(edgelistFile['child'].tolist()) - set(edgelistFile['parent'].tolist()))
-genesList = list(set(genesList_x) & set(genesList_edges))
-print "Number of Genes used: " + str(len(genesList))
+genesList = sorted(set(genesList_x) & set(genesList_edges))
+print("Number of Genes used: " + str(len(genesList)))
 assert len(genesList) == len(set(genesList)), "genesList non unique!"
 genesListOrig = copy.copy(genesList)
 edgelistFile = edgelistFile[edgelistFile['child'].isin(genesList) | edgelistFile['child'].isin(edgelistFile['parent'])]
 open(os.path.join(outPath, "genesList.txt"),"w").write("\n".join(genesList))
 
 # NETWORK OUTPUTS matched between Ys and edgelist --------------------------------------------------------------------------------------------------------------------
-outputs_y = list(set(file_y.columns.tolist()) - set(["barcode"]))
-outputs_edges = list(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
-outputs = list(set(outputs_y) & set(outputs_edges))
-print "Number of Outputs used: " + str(len(outputs))  + " --> " + ",".join(outputs)
-print "\tClass labels: " + ",".join(outputs_y)
-print "\tNetwork outputs: " + ",".join(outputs_edges)
+outputs_y = sorted(set(file_y.columns.tolist()) - set(["barcode"]))
+outputs_edges = sorted(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
+outputs = sorted(set(outputs_y) & set(outputs_edges))
+print("Number of Outputs used: " + str(len(outputs))  + " --> " + ",".join(outputs))
+print("\tClass labels: " + ",".join(outputs_y))
+print("\tNetwork outputs: " + ",".join(outputs_edges))
 assert len(outputs) > 0, "No outputs fitting between y table and edgelist"
 assert len(outputs) == len(set(outputs)), "outputs non unique!"
 open(os.path.join(outPath, "outputs.txt"),"w").write("\n".join(outputs))
@@ -253,8 +286,8 @@ if args.control:
     # Set up fullY
     size_ds = int(min(fullY.shape[1], args.minibatch*2)/2) * 2 # this must be devidable by two
     fullY = fullY[0:1,:size_ds]
-    fullY[:,:size_ds/2] = 1
-    fullY[:,size_ds/2:] = 0
+    fullY[:,:size_ds//2] = 1
+    fullY[:,size_ds//2:] = 0
     
     # set up Barcodes
     barcodes = barcodes[:size_ds]
@@ -296,26 +329,27 @@ train_idx = []
 if "Set" in list(file_y): # if some elements are defined
     assert file_y["barcode"].tolist() == barcodes
     if set(file_y['Set'].tolist()) == set(['train', 'test', 'val']): # if all sets are defined
-        print "Setting train - val - test sets from y-file"
+        print("Setting train - val - test sets from y-file")
         test_idx = indexInList(file_y[file_y['Set']=="test"]['barcode'].tolist(), barcodes)
         val_idx = indexInList(file_y[file_y['Set']=="val"]['barcode'].tolist(), barcodes)
         train_idx = indexInList(file_y[file_y['Set']=="train"]['barcode'].tolist(), barcodes)
     elif "test" in file_y['Set'].tolist():  # if only test set is defined
-        print "Setting test set from y-file"
+        print("Setting test set from y-file")
         test_idx = indexInList(file_y[file_y['Set']=="test"]['barcode'].tolist(), barcodes)
     else:   # if nothing is defined
-        print "Found Set column in Y-file but no mention of test set"
+        print("Found Set column in Y-file but no mention of test set")
 
 # Was the test set defined?
 test_def = test_idx != []
 # if the previous step didn't define everything, than randomly pick elements
 if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
     # Number of test cells (this is relative to the full number of cells)
-    nrTestCells = len(barcodes)*args.testSet
+    nrTestCells = int(len(barcodes)*args.testSet)
+    assert isinstance(args.maxCells, int)
     if nrTestCells > args.maxCells: nrTestCells = args.maxCells
     
     # Group cells by output
-    test_groups = ["".join(x) for x in np.transpose(fullY.astype("int").astype("S90")).tolist()]
+    test_groups = ["".join([str(i) for i in x]) for x in np.transpose(fullY.astype("int")).tolist()]
     test_groups_list={}
     for test_grp in set(test_groups):
         test_groups_list[test_grp] = []
@@ -326,20 +360,19 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
             test_groups_list[x].append(idx)
     
     # Split indices into test and train set
-    print outputs
+    print(outputs)
     test_idx = [] if not test_def else test_idx # if the test_idx is already defined then we keep this
     val_idx = []
     train_idx = []
-    for test_grp in set(test_groups):
+    for test_grp in sorted(set(test_groups)):
         # Draw a number from all indices for test and validation set, then draw from those for the validation set only
         # if the test set is predefined, then we still draw barcodes for it, but then do not use them
         test_and_val_group_N = int(((len(test_groups_list[test_grp]) + 0.0)/len(test_groups)) * nrTestCells * 2)
         test_and_val_barcodes=np.random.choice(test_groups_list[test_grp], test_and_val_group_N, replace=False).tolist()
-        val_idx_x = np.random.choice(test_and_val_barcodes, test_and_val_group_N/2, replace=False).tolist()
-        test_idx_x = list(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
-        train_idx_x = list(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
-        # Print and assertions
-        print test_grp + ": test: " + str(len(test_idx_x)) + " val: " + str(len(val_idx_x)) + " train: " + str(len(train_idx_x)) + " of:  " + str(len(test_groups_list[test_grp]))
+        val_idx_x = np.random.choice(test_and_val_barcodes, int(test_and_val_group_N/2), replace=False).tolist()
+        test_idx_x = sorted(set(test_and_val_barcodes) - set(val_idx_x)) if not test_def else [] # if the test indices are already defined, then we add nothing
+        train_idx_x = sorted(set(test_groups_list[test_grp]) - set(val_idx_x) - set(test_idx_x))
+        print(test_grp + ": test: " + str(len(test_idx_x)) + " val: " + str(len(val_idx_x)) + " train: " + str(len(train_idx_x)) + " of:  " + str(len(test_groups_list[test_grp])))
         assert len(test_idx_x) + len(val_idx_x) + len(train_idx_x) == len(test_groups_list[test_grp])
         assert len(set(test_idx_x) & set(val_idx_x)) == 0
         assert len(set(test_idx_x) & set(train_idx_x)) == 0
@@ -349,6 +382,8 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
         val_idx = val_idx + val_idx_x
         train_idx = train_idx + train_idx_x
 
+
+print(test_idx[1:5])
 # Final assertions for the split
 assert len(test_idx) + len(val_idx) + len(train_idx) == len(barcodes), "Error assigning test, training, and validation set"
 assert len(set(test_idx) & set(val_idx)) == 0, "Error assigning test, training, and validation set"
@@ -364,10 +399,12 @@ x_train = fullData[:,train_idx]
 x_val = fullData[:,val_idx]
 x_test = fullData[:,test_idx]
 
-# print result of draws
-print "Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])])
-print "Validation Ys \t(total " + str(y_test.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_test[i,:].sum()) for i in range(y_test.shape[0])])
-print "Testing Ys \t(total " + str(y_val.shape[1]) + "): \t" + " - ".join(outputs) + " : \t" + " - ".join([str(y_val[i,:].sum()) for i in range(y_val.shape[0])])
+print(test_idx[1:5])
+
+# print result of draws)
+print("Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])]))
+print("Validation Ys \t(total " + str(y_test.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_test[i,:].sum()) for i in range(y_test.shape[0])]))
+print("Testing Ys \t(total " + str(y_val.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_val[i,:].sum()) for i in range(y_val.shape[0])]))
 
 
 # Normalize to 0-1 for each row (input/gene) --------------------------------------------------------------------------------------------------------------------
@@ -411,10 +448,10 @@ if args.normalizedMatrix01:
 
 # Get weight matrix FUNCTION  --------------------------------------------------------------------------------------------------------------------
 def weightMatrixFromYs(ys_input):
-    matrix_groups = ["".join(x) for x in np.transpose(ys_input.astype("int").astype("S90")).tolist()]
+    matrix_groups = ["".join([str(i) for i in x]) for x in np.transpose(ys_input.astype("int")).tolist()]
     matrix_groups_weight={}
     # get factor to multiply by for each group
-    for matrix_grp in set(matrix_groups):
+    for matrix_grp in sorted(set(matrix_groups)):
         matrix_groups_weight[matrix_grp] = (1.0/((matrix_groups.count(matrix_grp) + 0.0) / len(matrix_groups))) / len(set(matrix_groups))
     
     # create a numpy array with the same dimensions as the input
@@ -429,10 +466,10 @@ y_test_weights = weightMatrixFromYs(y_test)
 # SHUFFLE DATA --------------------------------------------------------------------------------------------------------------------
 if args.shuffleGenes:
     rd.shuffle(genesList)
-    print "Genes were shuffled"
+    print("Genes were shuffled")
 
 if genesList[1] != genesListOrig[1]:
-    print "Genes were indeed shuffled"
+    print("Genes were indeed shuffled")
 
 # FINISHED DATA SETUP --------------------------------------------------------------------------------------------------------------------
 logMem("Setup data")
@@ -446,7 +483,7 @@ logMem("Setup data")
 if args.minibatch == 0 or args.minibatch > x_train.shape[1]:
     args.minibatch = x_train.shape[1]
 else:
-    args.minibatch = x_train.shape[1]/(x_train.shape[1]/(args.minibatch))
+    args.minibatch = int(x_train.shape[1]//(x_train.shape[1]//(args.minibatch)))
 
 
 
@@ -457,19 +494,18 @@ nodesRanks = []
 edges_ranks = copy.deepcopy(edgelistFile)
 edges_ranks_rows = edges_ranks.shape[0] + 1
 i = 1
-# Cycle through edgelist and add leaves to nodesRanks
-# while we decrease the number of rows each time?
-while edges_ranks.shape[0] < edges_ranks_rows:
+# Cycle through edgelist and add leaves to nodesRanks, thus building up nodesRanks from the bottom
+while edges_ranks.shape[0] < edges_ranks_rows: # stop when no nodes (leaves) were added to the nodesRanks, edges_ranks_rows is edges_ranks.shape[0] at the last iteration
     edges_ranks_rows = edges_ranks.shape[0]
-    leaves = set(edges_ranks['child'].tolist()) - set(edges_ranks['parent'].tolist())
+    leaves = sorted(set(edges_ranks['child'].tolist()) - set(edges_ranks['parent'].tolist())) # Nodes that are only children (not parents) are leaves
     if i > 1:
-        nodesRanks.extend(leaves)
+        nodesRanks.extend(leaves) # leaves are added to the nodes ranks
     else:
         assert set(leaves).issubset(set(genesListOrig)), "Some genes not found in the data!"
-    edges_ranks = edges_ranks.loc[~edges_ranks['child'].isin(leaves)]
+    edges_ranks = edges_ranks.loc[~edges_ranks['child'].isin(leaves)] # remove interactions of leaves
     i += 1
 
-assert edges_ranks.shape[0] == 0, "Edgelist is circular!"
+assert edges_ranks.shape[0] == 0, "Edgelist is circular!" # if there are edges remaining after the above
 # add output nodes to the list
 nodesRanks.extend(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child'].tolist()))
 
@@ -478,7 +514,7 @@ nodesRanks.extend(set(edgelistFile['parent'].tolist()) - set(edgelistFile['child
 ###################################
 #### MAP CONNECTIONS IN NETWORK ###
 ###################################
-print "----------------\n...Mapping connections"
+print("----------------\n...Mapping connections")
 # edge list (for each node, get all the children (as string) in a list)
 edges={}
 for index, row in edgelistFile.iterrows():
@@ -506,9 +542,9 @@ for iNode in nodesRanks:
             nodeNodeMap[iNode].append(nodesRanks.index(eg))
         else:
             sys.exit(eg + " was not found in the nodes or the genes! Exiting")
-            #print(eg + " was not found in the nodes or the genes! Exiting")
+            #print((eg + " was not found in the nodes or the genes! Exiting"))
 
-# Weights (tf variable)
+# Weights
 weightTotalLength = sum([len(weightMap[i]) for i in nodesRanks])
 
 # Assertions for this set up
@@ -528,7 +564,7 @@ logMem("Setup Network")
 #########################
 #### TF NETWORK SETUP ###
 #########################
-print "----------------\n...Defining computational graph"
+print("----------------\n...Defining computational graph")
 
 # Dropout Keep probability --------------------------------------------------------------------------------------------------------------------
 dropoutKP_NODES = tf.cast(tf.placeholder_with_default(input=1.0, shape=[], name="dropoutKP_NODES"), tf.float64)
@@ -567,7 +603,7 @@ nodes = {}
 nodes_loss = {}
 genes_unstacked = tf.unstack(genes)
 for n in nodesRanks:
-    #print n
+    #print(n)
     with tf.name_scope(n):
         # Z
         weightsX = tf.slice(weights, [weightMap[n][0],0],[len(weightMap[n]),1])
@@ -589,17 +625,17 @@ for n in nodesRanks:
         
         # Dropout, not on output nodes
         if doDropout and not n in outputs:
-            print "dropout on " + n
+            print("dropout on " + n)
             # The next code tests if the parents of node n have more than one children. If this is not the case, then we do use dropout
             parents = edgelistFile[edgelistFile['child'].str.match("^" + n + "$")]['parent'].tolist()
             children = len(set(edgelistFile[edgelistFile['parent'].isin(parents)]["child"].tolist()))
             if children == 1:
-                print "Skipping dropout for " + n
+                print("Skipping dropout for " + n)
             elif children == 2 and not args.disableDropoutAdjust:
-                print n + "'s parents have 2 children - dropout adjusted to 0.9 or " + str(args.dropOut)
+                print(n + "'s parents have 2 children - dropout adjusted to 0.9 or " + str(args.dropOut))
                 nodes[n] = tf.nn.dropout(x=nodes[n], keep_prob=tf.maximum(dropoutKP_NODES, 0.9))
             elif children == 3 and not args.disableDropoutAdjust:
-                print n + "'s parents have 3 children - dropout adjusted to 0.7 or " + str(args.dropOut)
+                print(n + "'s parents have 3 children - dropout adjusted to 0.7 or " + str(args.dropOut))
                 nodes[n] = tf.nn.dropout(x=nodes[n], keep_prob=tf.maximum(dropoutKP_NODES, 0.7))
             else:
                 nodes[n] = tf.nn.dropout(x=nodes[n], keep_prob=dropoutKP_NODES)
@@ -650,7 +686,7 @@ logMem("Setup Tensorflow")
 ###################
 #### INITIALIZE ###
 ###################
-print "----------------\n...Initializing"
+print("----------------\n...Initializing")
 init = tf.global_variables_initializer()
 sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=args.threads,intra_op_parallelism_threads=args.threads))
 sess.run(init)
@@ -661,7 +697,7 @@ logMem("Initiated Tensorflow")
 #############################
 #### PREPARE OUTPUT FILES ###
 #############################
-print "----------------\n...Preparing outputs"
+print("----------------\n...Preparing outputs")
 sep=","
 
 # Saver (saves models during training)
@@ -671,7 +707,7 @@ saver = tf.train.Saver()
 merged = tf.summary.merge_all()
 if args.tfWrite:
     train_writer = tf.summary.FileWriter(outPath + '/train', sess.graph)
-    test_writer = tf.summary.FileWriter(outPath + '/test', sess.graph)
+    val_writer = tf.summary.FileWriter(outPath + '/val', sess.graph)
 
 # Cost output (Track progress)
 costFile = open(os.path.join(outPath, "tf_cost.csv"),"w")
@@ -680,12 +716,11 @@ costFile.close()
 
 # Settings
 settingsFile = open(os.path.join(outPath, "tf_settings.csv"),"w")
-settingsFile.write("alpha" + sep + str(args.alpha) + "\n")
-settingsFile.write("lambda" + sep + str(args.lambd) + "\n")
-settingsFile.write("DropoutKP" + sep + str(args.dropOut) + "\n")
-settingsFile.write("DropoutKPGenes" + sep + str(args.dropOutGenes) + "\n")
-settingsFile.write("momentum" + sep + str(args.momentum) + "\n")
-settingsFile.write("minibatch" + sep + str(args.minibatch) + "\n")
+settingsDict = vars(args)
+for argsKey in settingsDict.keys():
+    settingsFile.write(argsKey + sep + str(settingsDict[argsKey]) + "\n")
+
+settingsFile.write("python" + sep + sys.version.replace("\n", " ") + "\n")
 settingsFile.close()
 
 
@@ -693,20 +728,20 @@ settingsFile.close()
 #################
 #### TRAINING ###
 #################
-print "----------------\n...Starting training"
+print("----------------\n...Starting training")
 # training iterations
 trainCost = []
-testErr = []
-testErrCurrentMin = 1
+valErr = []
+valErrCurrentMin = 1
 breakCounter = 0
 start = time.time()
 logMem("Prepared Training")
 for i in [xx + 1 for xx in range(args.iterations)]:
     
     # DEFINE MINIBATCH    
-    idxs = range(x_train.shape[1])
+    idxs = list(range(x_train.shape[1]))
     np.random.shuffle(idxs)
-    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in range(0, x_train.shape[1], args.minibatch)]
+    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in list(range(0, x_train.shape[1], args.minibatch))]
     # generates list of lists, each containing the indices used
     
     # TRAIN BY MINIBATCH
@@ -720,50 +755,49 @@ for i in [xx + 1 for xx in range(args.iterations)]:
             sess.run(train, {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
     
     if i < 10 or i % 10 == 0:
-        print "\nTraining epoch: " + str(i)
+        print("\nTraining epoch: " + str(i))
         
         # Loss, error, etc on training and validation set
         lossRes, trainClassProb, trainWriteContent = sess.run([loss, y_hat, merged], {genesOrig:x_batch, y_true:y_batch, dropoutKP_NODES: args.dropOut, dropoutKP_GENES: args.dropOutGenes, y_weights:y_batch_weights})
-        lossTestRes, testWriteContent, testerror, testAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
-        testErrRun = testerror.mean()
-        
-        # Print and write progress
-        print "Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossTestRes + " Validation error: " + str(testErrRun)
-        costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
-        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossTestRes) + sep + str(testErrRun) + sep + str(testAccuracy.mean()) + sep + str(breakCounter) + "\n")
-        costFile.close()
+        lossValRes, valWriteContent, valerror, valAccuracy = sess.run([loss, merged, error,accuracy], {genesOrig:x_val, y_true:y_val, y_weights:y_val_weights})
+        valErrRun = valerror.mean()
         
         # Tensorboard output
         if args.tfWrite:
             train_writer.add_summary(trainWriteContent, i)
-            test_writer.add_summary(testWriteContent, i)
+            val_writer.add_summary(valWriteContent, i)
         
         # Early stopping
         if i > 10 and not args.disableInterrupt:
             if trainCost[-1] - lossRes < 0.00001: # if the general error goes up or stays equal
                 breakCounter += 1
-            if any(testErrPrevious + 0.05 < testErrRun for testErrPrevious in testErr): # if test error goes up
+            if any(valErrPrevious + 0.05 < valErrRun for valErrPrevious in valErr): # if val error goes up
                 breakCounter += 1
-        
-        print "Break Counter = " + str(breakCounter)
+                
+        # print and write progress)
+        print("Mean loss: " + "%.4f" % lossRes + " Validation loss: " + "%.4f" % lossValRes + " Validation error: " + str(valErrRun))
+        print("Break Counter = " + str(breakCounter))
+        costFile = open(os.path.join(outPath, "tf_cost.csv"),"a")
+        costFile.write(str(i) + sep + str(lossRes) + sep + str(lossValRes) + sep + str(valErrRun) + sep + str(valAccuracy.mean()) + sep + str(breakCounter) + "\n")
+        costFile.close()
         
         if breakCounter > args.maxBreakCount:
             break
         
         # Save model
-        if i > 2 and (testErrRun < 0.2 and testErrCurrentMin * args.minImprovement > testErrRun):
+        if i > 2 and (valErrRun < 0.2 and valErrCurrentMin * args.minImprovement > valErrRun):
             breakCounter = 0
             saver.save(sess, os.path.join(outPath,'best-model'))
-            testErrCurrentMin = testErrRun
-            print "Model saved at iteration " + str(i) + " at Test error: " + str(testErrRun)
+            valErrCurrentMin = valErrRun
+            print("Model saved at iteration " + str(i) + " at Validation error: " + str(valErrRun))
         
         trainCost.append(lossRes)
-        testErr.append(testErrRun)
+        valErr.append(valErrRun)
     
 
 # DONE
-print "----------------\n...Training done:"
-print start - time.time()
+print("----------------\n...Training done:")
+print(start - time.time())
 logMem("Trained Tensorflow")
 
 
@@ -774,36 +808,36 @@ logMem("Trained Tensorflow")
 # Load last model
 if os.path.exists(os.path.join(outPath,'best-model.meta')):
     saver.restore(sess, os.path.join(outPath,'best-model'))
-    print "Model restored from " + outPath
+    print("Model restored from " + outPath)
 
 logMem("Loaded Best Model")
 
 # Write out Test Error with loaded model
-valErrNumGrad = sess.run(error, {genesOrig:x_test, y_true:y_test, y_weights:y_test_weights}).mean()
-print "Test Error before Numerical Gradient = " + str(valErrNumGrad)
-open(os.path.join(outPath, "tf_NumGradTestError.txt"),"w").write("NumGradTestError" + "\n" + str(valErrNumGrad))
+testErrNumGrad = sess.run(error, {genesOrig:x_test, y_true:y_test, y_weights:y_test_weights}).mean()
+print("Test Error before Numerical Gradient = " + str(testErrNumGrad))
+open(os.path.join(outPath, "tf_NumGradTestError.txt"),"w").write("NumGradTestError" + "\n" + str(testErrNumGrad))
 
 
 # Write y hat to file
-val_y_hat = sess.run(y_hat, {genesOrig:x_test, y_true:y_test})
-print "----------------\n...Writing y hat to file"
-val_y_hat_file = open(os.path.join(outPath, "tf_yHat_test.csv"),"w")
-val_y_hat_file.write(",".join(outputs) + "\n")
-val_y_hat_file.write(pd.DataFrame(np.transpose(val_y_hat)).to_csv(header=False, index=False))
-val_y_hat_file.close()
+test_y_hat = sess.run(y_hat, {genesOrig:x_test, y_true:y_test})
+print("----------------\n...Writing y hat to file")
+test_y_hat_file = open(os.path.join(outPath, "tf_yHat_test.csv"),"w")
+test_y_hat_file.write(",".join(outputs) + "\n")
+test_y_hat_file.write(pd.DataFrame(np.transpose(test_y_hat)).to_csv(header=False, index=False))
+test_y_hat_file.close()
 
 # Write y true to file
-val_y_hat_file = open(os.path.join(outPath, "tf_yTrue_test.csv"),"w")
-val_y_hat_file.write(",".join(outputs) + "\n")
-val_y_hat_file.write(pd.DataFrame(np.transpose(y_test.astype("int"))).to_csv(header=False, index=False))
-val_y_hat_file.close()
+test_y_true_file = open(os.path.join(outPath, "tf_yTrue_test.csv"),"w")
+test_y_true_file.write(",".join(outputs) + "\n")
+test_y_true_file.write(pd.DataFrame(np.transpose(y_test.astype("int"))).to_csv(header=False, index=False))
+test_y_true_file.close()
 
 logMem("Tensorflow results accuracy")
 
 # Weight output
 sep = ","
 weightRes, interceptRes = sess.run([weights, interceptWeights])
-print "weights: " + "%.4f" % np.abs(weightRes).mean() + " intercepts: " + "%.4f" % np.abs(interceptRes).mean()
+print("weights: " + "%.4f" % np.abs(weightRes).mean() + " intercepts: " + "%.4f" % np.abs(interceptRes).mean())
 weightFile = open(os.path.join(outPath, "tf_weights.csv"),"w")
 weightFile.write("parent,child,weight" + "\n")
 for n in nodesRanks:
@@ -819,14 +853,28 @@ for n in nodesRanks:
 
 weightFile.close()
 
+# Node activations for each sample of each output
+nacs_dict={}
+for i,oo in enumerate(outputs):
+    nacs = sess.run(nodes, {genesOrig:x_test[:,np.where(y_test[i,:] == 1)[0]]})
+    nacs_dict[oo] = [x.mean() for x in nacs.values()]
+
+nodeActFile = open(os.path.join(outPath, "tf_NodeActivations.csv"),"w")
+sep = ","
+nodeActFile.write("Node" + sep + sep.join(outputs) + "\n")
+for i,n in enumerate(nodes.keys()):
+    nodeActFile.write(n + sep + sep.join([str(nacs_dict[oo][i]) for oo in outputs]) + "\n")
+
+nodeActFile.close()
+
 
 
 ###########################################
 #### NUMERICAL GRADIENT NODE IMPORTANCE ###
 ###########################################
 if not args.disableNumGrad:
-    print "----------------\n...Starting Numerical Gradient estimation:"
-    print start - time.time()
+    print("----------------\n...Starting Numerical Gradient estimation:")
+    print(start - time.time())
 
     #numGrad_yWeights = np.array([[1.0 for x in range(y_test.shape[1])],]* y_test.shape[0]) # REMOVE IF HAS NOT FAILED
     # For each node, get y_hat with pos and neg perturbation (numApproxPlus/numApproxMinus)
@@ -834,7 +882,7 @@ if not args.disableNumGrad:
     numAgg = 0
     nodesNumGrad = [x for x in nodesRanks if not x in outputs]
     for n in nodesNumGrad:
-        print "Calculating numerical gradient for: " + n
+        print("Calculating numerical gradient for: " + n)
         logMem("Tensorflow numgrad " + n)
         res = (sess.run(y_hat, {genesOrig:x_test, y_true:y_test, numApproxPlus: n}) - sess.run(y_hat, {genesOrig:x_test, y_true:y_test, numApproxMinus: n}))/(2*args.numGradEpsilon)
         res = res.mean(1)
@@ -860,9 +908,9 @@ if not args.disableNumGrad:
 ##################
 #### FINISH UP ###
 ##################
-print "----------------\n...Time passed:"
-print start - time.time()
+print("----------------\n...Time passed:")
+print(start - time.time())
 
 sess.close()
 
-print "\n\n\t\t\tKPNN TRAINING COMPLETED SUCCESSFULLY\n\n"
+print("\n\n\t\t\tKPNN TRAINING COMPLETED SUCCESSFULLY\n\n")

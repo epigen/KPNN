@@ -37,10 +37,20 @@ rsconnect/
 
 Demos/
 
+Rplots.pdf
+
 outputs/
 Outputs/
+TrainedKPNNs/
 
 inputs/
 Inputs/
+InputData/
 
 Analysis/
+
+Demos/
+
+setup.sh
+
+gmon.out

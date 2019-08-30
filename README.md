@@ -1,10 +1,9 @@
 # KPNNs
-Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at). KPNNs are neural networks that learn to predict class values from input data given a specific network structure. After training, they enable extraction of extraction of node weights using numerical gradient estimation. Node weights represent the importance of individual nodes for predictions.
-
+Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at). KPNNs are neural networks that are trained using a knowledge-based network structure, which enables interpretability after training. Networks used in KPNNs should consist of nodes with labels (for example proteins in biological networks) that are connected based on prior knolwedge. After training, KPNNs enable extraction of node weights (importance scores) that represent the importance of individual nodes for the prediction.
 
 # System requirements
 1. KPNNs were developed on linux and on Mac.
-2. Training of KPNNs is performed by a python script (KPNN_Function.py). This program has been developed and tested using python (tested on versions 2.7.6 and 2.7.13) 
+2. Training of KPNNs is performed by a python script (KPNN_Function.py). This program has been developed and tested using python (tested on versions 2.7.6, 2.7.13, and 3.7.3) 
 3. Downstream analysis is performed in R (tested on versions 3.2.3 or 3.5.1)
 
 # Installation
@@ -23,6 +22,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  # pip install virtualenv # if not installed yet
 	  mkdir virtenv
 	  virtualenv virtenv --no-site-packages
+	  # for python 3: virtualenv virtenv --no-site-packages -p python3
 	  source virtenv/bin/activate
       ```
 4. Installation instructions:
@@ -30,17 +30,16 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  # Clone this repository
 	  git clone https://github.com/epigen/KPNN.git
 	  cd KPNN/
-	  git checkout dev
 	  
-	  # Sets up environmental variables
-	  source setup_example.sh
+	  # Sets up environmental variables for the demo example
+	  source Demo_setup.sh
 
 	  # Install requirements (python and R)
 	  pip install -r Requirements_python.txt
 	  Rscript Requirements_R.R
 
 	  # Generate test data and run test
-	  Rscript Generate_test_data.R
+	  Rscript Test_Data.R $KPNN_INPUTS
 	  python KPNN_Function.py
       ```
 5. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete and KPNN training works.
@@ -48,7 +47,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 # Demo to train one network
 1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget or curl is set up on your system, you can do this using the scripts under Download_Data/.
       ```
-	  sh Download_Data/Download_Data_curl.sh 
+	  sh Download_Data/Download_SIM.sh 
       ```
 2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs, for example:
       ```
