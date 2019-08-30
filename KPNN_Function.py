@@ -73,11 +73,10 @@ parser.add_argument('--threads', type=int, help="Parallelization", default=10)
 ## DEFAULT ARGUMENTS FOR TEST RUNS ###########
 ##############################################
 print(sys.argv)
-args_dry="--dryRun" in sys.argv
-#args_too_few=len(sys.argv) <= 4
-#int(list(reversed([i[:2] for i in sys.argv])).index("--")) <= 3
+args_dry="--dryRun" in sys.argv # not implemented, maybe for later
 if args_dry or sys.argv == [''] or sys.argv == [__file__]: # means that we (i) called a dry run, (ii) are within the python shell, or (iii) called the script without parameters
     print("Manually setting arguments to demo data")
+    assert 'KPNN_INPUTS' in os.environ.keys(), 'KPNN_INPUTS needs to be defined when running KPNNs without defining required inputs, run with -h flag to read the help menue'
     args = parser.parse_args([
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
