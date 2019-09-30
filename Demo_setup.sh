@@ -11,6 +11,10 @@ mkdir -p $KPNN_INPUTS
 export KPNN_OUTPUTS=$PWD/TrainedKPNNs/       
 mkdir -p $KPNN_OUTPUTS
 
+# Where temporary outputs are saved (trained KPNNs when testing the setup)
+export KPNN_TMP=$PWD/Tmp/     
+mkdir -p $KPNN_TMP
+
 # Results of demo runs
 export KPNN_DEMOS=$PWD/Demos/           
 mkdir -p $KPNN_DEMOS

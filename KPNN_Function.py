@@ -66,7 +66,7 @@ parser.add_argument('--numGradEpsilon', type=float, help="Epsilon of numerical g
 parser.add_argument('--disableNumGrad', action='store_true', help="Do not perform numerical gradient estimation of node importance (saves quite some time)")
 
 # Computing limits
-parser.add_argument('--threads', type=int, help="Parallelization", default=10)
+parser.add_argument('--threads', type=int, help="Parallelization number of thread", default=1)
 
 
 ##############################################
@@ -81,7 +81,7 @@ if args_dry or sys.argv == [''] or sys.argv == [__file__]: # means that we (i) c
         os.environ['KPNN_INPUTS'] + "/TEST_Data.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_Edgelist.csv",
         os.environ['KPNN_INPUTS'] + "/TEST_ClassLabels.csv",
-        os.environ['TMPDIR']
+        os.environ['KPNN_TMP']
     ] + sys.argv[1:])
     args.lambd = 0.01
     args.iterations = 5
@@ -235,6 +235,7 @@ open(os.path.join(outPath, "barcodes.txt"),"w").write("\n".join(barcodes))
 
 # LOAD EDGE LIST and match gene list with input data --------------------------------------------------------------------------------------------------------------------
 edgelistFile=pd.read_csv(args.inPathEdges, sep=",")
+assert len(set([edgelistFile['child'][i] + "_" + edgelistFile['parent'][i] for i in range(edgelistFile.shape[0])])) == edgelistFile.shape[0], "Edgelist contains duplicated elements"
 genesList_edges = list(set(edgelistFile['child'].tolist()) - set(edgelistFile['parent'].tolist()))
 genesList = sorted(set(genesList_x) & set(genesList_edges))
 print("Number of Genes used: " + str(len(genesList)))
@@ -553,7 +554,9 @@ for iNode in nodesRanks:
     tarLength = len(nodeGeneMap[iNode]) + len(nodeNodeMap[iNode])
     assert tarLength == len(weightMap[iNode])
     assert tarLength == len(edges[iNode])
+    # The node (protein) neighbors of iNode are all neighbors of iNode (edges[iNode]) that are nodes
     assert len(nodeNodeMap[iNode]) == len(list(set(edges[iNode]) & set([nodesRanks[i] for i in nodeNodeMap[iNode]])))
+    # The genes (input) neighbors of iNode are all neighbors of iNode (edges[iNode]) that are genes
     assert len(nodeGeneMap[iNode]) == len(list(set(edges[iNode]) & set([genesList[i] for i in nodeGeneMap[iNode]])))
 
 # DONE
@@ -914,3 +917,5 @@ print(start - time.time())
 sess.close()
 
 print("\n\n\t\t\tKPNN TRAINING COMPLETED SUCCESSFULLY\n\n")
+
+print("\nResults are exported to " + outPath +"\n\n")

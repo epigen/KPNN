@@ -7,17 +7,12 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 3. Downstream analysis is performed in R (tested on versions 3.2.3 or 3.5.1)
 
 # Installation
-1. Make sure you use the right versions of python and R:
-      ```
-	  python --version
-	  R --version
-      ```
-2. Create a directory to contain all analyses:
+1. Create a directory to contain all analyses:
       ```
 	  mkdir KPNN/
 	  cd KPNN/
       ```
-3. The recommended approach is to use a virtual environment:
+2. The recommended approach is to use a virtual environment:
       ```
 	  # pip install virtualenv # if not installed yet
 	  mkdir virtenv
@@ -25,7 +20,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  # for python 3: virtualenv virtenv --no-site-packages -p python3
 	  source virtenv/bin/activate
       ```
-4. Installation instructions:
+3. Installation instructions:
 	  ```
 	  # Clone this repository
 	  git clone https://github.com/epigen/KPNN.git
@@ -42,12 +37,12 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  Rscript Test_Data.R $KPNN_INPUTS
 	  python KPNN_Function.py
       ```
-5. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete and KPNN training works.
+4. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete and KPNN training works.
 
 # Demo to train one network
 1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget or curl is set up on your system, you can do this using the scripts under Download_Data/.
       ```
-	  sh Download_Data/Download_SIM.sh 
+	  sh Download_Data/Download_SIM1.sh 
       ```
 2. To train a KPNN, run the python program with four arguments: (1) Input data, (2) an edge list, (3) class labels, (4) a path to store the outputs, for example:
       ```
@@ -57,7 +52,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 	  outPath=$KPNN_DEMOS
       python $KPNN_CODEBASE/KPNN_Function.py --alpha=0.001 --lambd=0.2 $data $edges $classLabels $outPath
       ```
-3. The program should run for approximately 30 minutes or less. It will then produce a folder called "run_1" (or a number > 1 if another run already exists) in the location defined by $outPath, where the output of the KPNN is stored. Outputs include:
+3. The program should run for approximately 30 minutes or less. It will then produce a folder in the location defined by $outPath, where the output of the KPNN is stored. Outputs include:
   - tf_cost.csv - tracks training progress over iterations
   - tf_NumGradMeans.csv - Node weights (from numerical gradient estimation)
   - tf_NumGradTestError.txt - Test error of the latest saved model that was used to calculate node weights
@@ -74,7 +69,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
   - NodeWeights.pdf - plot of node weights in the network.
 
 # Training multiple network replicates
-1. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder Slurm/. These scripts are based on [SLURM](slurm.schedmd.com). The script to run simulated demo networks is provided in run_SIM_KPNN.sh.
+1. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder Slurm_Scripts/. These scripts are based on [SLURM](slurm.schedmd.com). The script to run simulated demo networks is provided in run_SIM_KPNN.sh.
 2. After training is complete, to summarize test error across trained networks, use the R script Analysis_Scripts/Analysis_CollectOutputs.R
 3. Finally, to summarize and plot node weights in trained networks, use the R script Analysis_Scripts/Analysis_SIM.R (this requires running of Analysis_CollectOutputs.R first).
 

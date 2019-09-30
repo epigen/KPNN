@@ -39,12 +39,14 @@ ggsave(paste0(kpnn.output.folder, "TrainingCurve.pdf"), w=5,h=4)
 
 
 # Node weights ------------------------------------------------------------
-nodeWeights[,NodeWeight := abs(output)]
-if("nodeX" %in% nodeWeights$Node) nodeWeights[,Node := gsub("nodeX", "A", gsub("b", "", Node))]
-nodeWeights$Node <- factor(nodeWeights$Node, levels = nodeWeights[order(NodeWeight)]$Node)
-pDat <- if(nrow(nodeWeights) <= 40) nodeWeights else nodeWeights[order(NodeWeight)][c(1:20,(nrow(nodeWeights)-20):nrow(nodeWeights))]
-ggplot(pDat, aes(x=Node, y=NodeWeight)) + geom_point(color="red") + # geom_bar(stat="identity") + 
-  theme_classic(12) + xRot() + ggtitle("Top and bottom 20 nodes shown")
-ggsave(paste0(kpnn.output.folder, "NodeWeights.pdf"), w=8, h=4)
+for(outx in setdiff(colnames(nodeWeights), "Node")){
+  nodeWeights[,NodeWeight := abs(get(outx))]
+  if("nodeX" %in% nodeWeights$Node) nodeWeights[,Node := gsub("nodeX", "A", gsub("b", "", Node))]
+  nodeWeights$Node <- factor(nodeWeights$Node, levels = nodeWeights[order(NodeWeight)]$Node)
+  pDat <- if(nrow(nodeWeights) <= 40) nodeWeights else nodeWeights[order(NodeWeight)][c(1:20,(nrow(nodeWeights)-20):nrow(nodeWeights))]
+  ggplot(pDat, aes(x=Node, y=NodeWeight)) + geom_point(color="red") + # geom_bar(stat="identity") + 
+    theme_classic(12) + xRot() + ggtitle("Top and bottom 20 nodes shown")
+  ggsave(paste0(kpnn.output.folder, "NodeWeights_",outx,".pdf"), w=8, h=4)
+}
 
 message("Successfully summarized KPNN run in folder ", kpnn.output.folder ,"\n")
