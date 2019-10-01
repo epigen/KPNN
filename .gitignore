@@ -49,6 +49,8 @@ InputData/
 
 Analysis/
 
+Tmp/
+
 Demos/
 
 setup.sh
