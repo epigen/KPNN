@@ -74,7 +74,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 3. Finally, to summarize and plot node weights in trained networks, use the R script Analysis_Scripts/Analysis_SIM.R (this requires running of Analysis_CollectOutputs.R first).
 
 # Instructions on how to run KPNNs on your data
-1. Example scripts to run additional datasets, such as the dataset on T cell receptor (TCR) stimulation or on predicting cell types in the Human Cell Atlas (HCA), or provided in the folder Slurm/.
-2. All required inputs can be downloaded using the scripts in Download_Data/, except for single-cell expression data from the Human Cell Atlas, which should be downloaded under https://preview.data.humancellatlas.org and should then be stored under $KPNN_INPUTS (defined in setup.sh)
-3. After training, use scripts in Analysis_Scripts: Analysis_CollectOutputs.R, and then Analysis_TCR.R or Analysis_HCA.R to summarize the results across network replicates.
+1. Example scripts to run additional datasets, such as the dataset on T cell receptor (TCR) stimulation or on predicting cell types in the Human Cell Atlas (HCA), or provided in the folder Slurm_Scripts/.
+2. All required inputs can be downloaded using the scripts in Download_Data/, except for single-cell expression data from the Human Cell Atlas, which should be downloaded under https://preview.data.humancellatlas.org.
+3. After training, use scripts in Analysis_Scripts: Analysis_CollectOutputs.R to summarize the results across network replicates.
 4. To adjust these analyses to your dataset, adjust the inputs to provide your data, class labels, and edgelist.
