@@ -40,7 +40,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
 4. The last command should finish without errors and you should see the message "KPNN TRAINING COMPLETED SUCCESSFULLY". Then installation is complete and KPNN training works.
 
 # Demo to train one network
-1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If wget or curl is set up on your system, you can do this using the scripts under Download_Data/.
+1. Download the Demo data from http://kpnn.computational-epigenetics.org/. If curl is set up on your system, you can do this using the scripts under Download_Data/.
       ```
 	  sh Download_Data/Download_SIM1.sh 
       ```
