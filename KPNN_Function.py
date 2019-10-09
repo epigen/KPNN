@@ -744,8 +744,13 @@ for i in [xx + 1 for xx in range(args.iterations)]:
     # DEFINE MINIBATCH    
     idxs = list(range(x_train.shape[1]))
     np.random.shuffle(idxs)
-    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in list(range(0, x_train.shape[1], args.minibatch))]
     # generates list of lists, each containing the indices used
+    minibatch_list = [idxs[j:min(j+args.minibatch, len(idxs)-1)] for j in list(range(0, x_train.shape[1], args.minibatch))]
+    # Remove list elements without indices (can happen - not sure why TODO)
+    minibatch_list_length = [len(x) for x in minibatch_list]
+    if 0 in minibatch_list_length:
+        minibatch_list_idx_remove = minibatch_list_length.index(0)
+        del minibatch_list[minibatch_list_idx_remove]
     
     # TRAIN BY MINIBATCH
     for i_batch in range(len(minibatch_list)):
