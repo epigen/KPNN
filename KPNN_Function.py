@@ -357,10 +357,11 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
     
     # Go through each group, identify indices for this group
     for idx, x in enumerate(test_groups):
-        if not idx in train_idx: # if the test set is defined, do not include those barcodes in the further steps
+        if not idx in test_idx: # if the test set is defined, do not include those barcodes in the further steps
             test_groups_list[x].append(idx)
     
     # Split indices into test and train set
+    print("OUTPUTS:")
     print(outputs)
     test_idx = [] if not test_def else test_idx # if the test_idx is already defined then we keep this
     val_idx = []
@@ -384,12 +385,12 @@ if len(test_idx) + len(val_idx) + len(train_idx) != len(barcodes):
         train_idx = train_idx + train_idx_x
 
 
-print(test_idx[1:5])
 # Final assertions for the split
 assert len(test_idx) + len(val_idx) + len(train_idx) == len(barcodes), "Error assigning test, training, and validation set"
 assert len(set(test_idx) & set(val_idx)) == 0, "Error assigning test, training, and validation set"
 assert len(set(test_idx) & set(train_idx)) == 0, "Error assigning test, training, and validation set"
 assert len(set(train_idx) & set(val_idx)) == 0, "Error assigning test, training, and validation set"
+# print("Final: " + "test: " + str(len(test_idx)) + " val: " + str(len(val_idx)) + " train: " + str(len(train_idx)) + " of:  " + str(len(barcodes)))
 
 # assign test and training set
 y_train = fullY[:,train_idx]
@@ -399,8 +400,6 @@ open(os.path.join(outPath, "barcodes_test.txt"),"w").write("\n".join([barcodes[i
 x_train = fullData[:,train_idx]
 x_val = fullData[:,val_idx]
 x_test = fullData[:,test_idx]
-
-print(test_idx[1:5])
 
 # print result of draws)
 print("Training Ys \t(total " + str(y_train.shape[1]) + "): \t" + "(== 1) - ".join(outputs) + "(== 1): \t" + " - ".join([str(y_train[i,:].sum()) for i in range(y_train.shape[0])]))

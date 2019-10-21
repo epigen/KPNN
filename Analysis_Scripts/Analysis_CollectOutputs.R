@@ -13,9 +13,9 @@ message(paste("Usage: ", usage))
 opt_parser = OptionParser(usage = usage);
 args <- parse_args(opt_parser, positional_arguments = 2)
 input.folder <- args$args[1]
-# input.folder <- "~/projects_shared/pathway_learning/results_analysis/46_03_TCR_opt/"
+# input.folder <- "opt/"
 output.folder <- args$args[2]
-# output.folder <- "~/projects_shared/pathway_learning/results_analysis/46_03_TCR_opt/"
+# output.folder <- "."
 if(!dir.exists(input.folder)) message("Missing folder of trained KPNNs :", input.folder, " please provide an existing folder")
 print(paste("Processing trained KPNNs from folder:", input.folder))
 dir.create(output.folder,recursive = TRUE)
