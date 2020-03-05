@@ -1,6 +1,8 @@
 # KPNNs
 Knowledge-primed neural networks developed in the [Bock lab](http://medical-epigenomics.org) at [CeMM](http://cemm.at). KPNNs are neural networks that are trained using a knowledge-based network structure, which enables interpretability after training. Networks used in KPNNs should consist of nodes with labels (for example proteins in biological networks) that are connected based on prior knolwedge. After training, KPNNs enable extraction of node weights (importance scores) that represent the importance of individual nodes for the prediction.
 
+[![DOI](https://zenodo.org/badge/190380526.svg)](https://zenodo.org/badge/latestdoi/190380526)
+
 # System requirements
 1. KPNNs were developed on linux and on Mac, and also tested on Windows 10 with Git Bash installed through Git for Windows (version 2.21.0.windows.1). 
 2. Training of KPNNs is performed by a python script (KPNN_Function.py). This program has been developed and tested using python (tested on versions 2.7.6, 2.7.13, and 3.7.3) 
