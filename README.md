@@ -71,7 +71,7 @@ Knowledge-primed neural networks developed in the [Bock lab](http://medical-epig
   - NodeWeights.pdf - plot of node weights in the network.
 
 # Training multiple network replicates
-1. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder Slurm_Scripts/. These scripts are based on [SLURM](www.slurm.schedmd.com). The script to run simulated demo networks is provided in run_SIM_KPNN.sh.
+1. To train multiple KPNNs in parallel, examples scripts to do so are provided in the folder Slurm_Scripts/. These scripts are based on [SLURM](https://www.slurm.schedmd.com). The script to run simulated demo networks is provided in run_SIM_KPNN.sh.
 2. After training is complete, to summarize test error across trained networks, use the R script Analysis_Scripts/Analysis_CollectOutputs.R
 3. Finally, to summarize and plot node weights in trained networks, use the R script Analysis_Scripts/Analysis_SIM.R (this requires running of Analysis_CollectOutputs.R first).
 
