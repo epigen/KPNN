@@ -296,7 +296,7 @@ if args.control:
     
     # Sum up expression to draw from
     control_grp1 = np.asarray(fullData.sum(1))[:,0].astype("int64")
-    control_grp2 = control_grp1 * np.random.choice([0.5, 2], control_grp1.shape[0]).astype("int64") # add two fold up down regulation everywhere
+    control_grp2 = (control_grp1 * np.random.choice([0.5, 2], control_grp1.shape[0])).astype("int64") # add two fold up down regulation everywhere
     
     # Generate full data
     control_grp1_sum = control_grp1.sum()
